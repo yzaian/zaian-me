@@ -562,6 +562,7 @@
     });
   }
   window.navigate = navigate;
+  window.addEventListener('pageshow', function(e) { if (e.persisted) { gsap.set('#curtain', { scaleY: 1, transformOrigin: 'top' }); gsap.to('#curtain', { scaleY: 0, duration: .9, ease: 'power3.inOut', delay: .05 }); } });
 </script>
 </body>
 </html>
