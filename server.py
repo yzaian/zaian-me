@@ -1,13 +1,43 @@
 #!/usr/bin/env python3
-import os, json, uuid, mimetypes
+import os, json, uuid, mimetypes, base64
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
-import email.parser
+import urllib.request
 
 PORT = int(os.environ.get('PORT', 4001))
 BASE = os.path.dirname(os.path.abspath(__file__))
 CONTENT_FILE = os.path.join(BASE, 'content.json')
 UPLOAD_DIR   = os.path.join(BASE, 'assets', 'portfolio')
+
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+GITHUB_REPO  = os.environ.get('GITHUB_REPO', 'yzaian/zaian-me')
+
+def github_push(path, file_bytes, message):
+    """Push a file to GitHub to make changes persistent."""
+    if not GITHUB_TOKEN:
+        return
+    api_url = f'https://api.github.com/repos/{GITHUB_REPO}/contents/{path}'
+    headers = {
+        'Authorization': f'token {GITHUB_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+    }
+    # Get current SHA (needed to update existing file)
+    sha = None
+    try:
+        req = urllib.request.Request(api_url, headers=headers)
+        with urllib.request.urlopen(req) as resp:
+            sha = json.loads(resp.read())['sha']
+    except Exception:
+        pass
+    body = {'message': message, 'content': base64.b64encode(file_bytes).decode()}
+    if sha:
+        body['sha'] = sha
+    try:
+        req = urllib.request.Request(api_url, data=json.dumps(body).encode(), headers=headers, method='PUT')
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print(f'GitHub push failed: {e}')
 
 def parse_multipart(rfile, content_type, content_length):
     boundary = None
@@ -81,6 +111,7 @@ class Handler(SimpleHTTPRequestHandler):
             data = json.loads(body.decode('utf-8'))
             with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
+            github_push('content.json', body, 'Update content via dashboard')
             self.send_json({'ok': True})
 
         elif parsed.path == '/api/upload':
@@ -93,11 +124,11 @@ class Handler(SimpleHTTPRequestHandler):
             dest = os.path.join(UPLOAD_DIR, safe_name)
             with open(dest, 'wb') as f:
                 f.write(file_bytes)
+            github_push(f'assets/portfolio/{safe_name}', file_bytes, 'Upload image via dashboard')
             self.send_json({'path': 'assets/portfolio/' + safe_name})
 
         elif parsed.path == '/api/upload-pdf':
             raw = self.rfile.read(cl)
-            # parse multipart to get 'pdf' file and 'type' field
             boundary = None
             for part in ct.split(';'):
                 part = part.strip()
@@ -126,6 +157,7 @@ class Handler(SimpleHTTPRequestHandler):
             dest = os.path.join(BASE, 'assets', names[pdf_type])
             with open(dest, 'wb') as f:
                 f.write(pdf_bytes)
+            github_push(f'assets/{names[pdf_type]}', pdf_bytes, 'Upload PDF via dashboard')
             self.send_json({'ok': True})
 
         else:
