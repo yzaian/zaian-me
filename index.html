@@ -594,22 +594,61 @@ function magneticLogo(card, logo) {
   });
 }
 
-// Load card logos from content.json
-(function loadCardLogos() {
+// Load all content from dashboard
+(function loadContent() {
   fetch('/api/content')
     .then(r=>{ if(!r.ok) throw new Error(); return r.json(); })
     .catch(()=>fetch('/content.json').then(r=>r.json()))
     .then(data=>{
-      const logoD = document.getElementById('logo-d');
-      const logoM = document.getElementById('logo-m');
+      const h  = data.hero   || {};
       const cd = data.cards?.design || {};
       const cm = data.cards?.music  || {};
-      if(cd.logoImage) {
-        logoD.innerHTML = `<img src="/${cd.logoImage}" alt="" style="max-height:2.4rem;max-width:100%;object-fit:contain;display:block;">`;
+
+      // ── Hero photo
+      if(h.photo) document.getElementById('hero-photo').src = '/' + h.photo;
+
+      // ── Hero name
+      if(h.nameFirst) document.getElementById('n1').textContent = h.nameFirst;
+      if(h.nameLast)  document.getElementById('n2').textContent = h.nameLast;
+
+      // ── Photo label
+      if(h.nameFirst || h.nameLast) {
+        const lbl = document.querySelector('.photo-label');
+        if(lbl) lbl.textContent = `${h.nameFirst||''} ${h.nameLast||''} · ${h.year||'2025'}`;
       }
-      if(cm.logoImage) {
-        logoM.innerHTML = `<img src="/${cm.logoImage}" alt="" style="max-height:2.2rem;max-width:100%;object-fit:contain;display:block;">`;
+
+      // ── Eyebrow
+      const ey = document.querySelector('#ey .r-inner');
+      if(h.location && ey) ey.textContent = `${h.location} · ${h.year||'2025'}`;
+
+      // ── Bio
+      if(h.bio) document.getElementById('bio').textContent = h.bio;
+
+      // ── Roles (first 2)
+      const roles = h.roles || [];
+      if(roles[0]) document.getElementById('r1').textContent = roles[0];
+      if(roles[1]) document.getElementById('r2').textContent = roles[1];
+
+      // ── Marquee
+      if(h.marquee && h.marquee.length) {
+        const items = h.marquee.map(m => `<span class="marquee-item">${m} <span class="marquee-sep">✦</span></span>`).join('');
+        document.querySelector('.marquee-track').innerHTML = items + items;
       }
+
+      // ── Card logos
+      const logoD = document.getElementById('logo-d');
+      const logoM = document.getElementById('logo-m');
+      if(cd.logoImage) logoD.innerHTML = `<img src="/${cd.logoImage}" alt="" style="max-height:2.4rem;max-width:100%;object-fit:contain;display:block;">`;
+      if(cm.logoImage) logoM.innerHTML = `<img src="/${cm.logoImage}" alt="" style="max-height:2.2rem;max-width:100%;object-fit:contain;display:block;">`;
+
+      // ── Card titles & descriptions
+      if(cd.title) document.querySelector('#card-d .card-title').textContent = cd.title;
+      if(cd.desc)  document.querySelector('#card-d .card-desc').textContent  = cd.desc;
+      if(cd.sub)   document.querySelector('#card-d .card-sub').textContent   = cd.sub;
+      if(cm.title) document.querySelector('#card-m .card-title').textContent = cm.title;
+      if(cm.desc)  document.querySelector('#card-m .card-desc').textContent  = cm.desc;
+      if(cm.sub)   document.querySelector('#card-m .card-sub').textContent   = cm.sub;
+
     }).catch(()=>{});
 })();
 
