@@ -142,6 +142,14 @@ class Handler(SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass  # quiet
 
+    def end_headers(self):
+        # Prevent browser caching of HTML so deploys are instantly visible
+        if self.path.endswith('.html') or self.path == '/' or self.path.endswith('/'):
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        super().end_headers()
+
     def send_json(self, data, status=200):
         body = json.dumps(data, ensure_ascii=False).encode()
         self.send_response(status)
