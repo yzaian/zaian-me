@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import os, json, uuid, mimetypes, base64
+import os, json, uuid, mimetypes, base64, hashlib, time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 import urllib.request
 
 PORT = int(os.environ.get('PORT', 4001))
@@ -12,6 +12,38 @@ UPLOAD_DIR   = os.path.join(BASE, 'assets', 'portfolio')
 GITHUB_TOKEN   = os.environ.get('GITHUB_TOKEN', '')
 GITHUB_REPO    = os.environ.get('GITHUB_REPO', 'yzaian/zaian-me')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+
+CLOUDINARY_CLOUD = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_KEY   = os.environ.get('CLOUDINARY_API_KEY', '')
+CLOUDINARY_SECRET= os.environ.get('CLOUDINARY_API_SECRET', '')
+
+def cloudinary_upload(file_bytes, original_filename):
+    if not CLOUDINARY_CLOUD:
+        return None
+    ts = str(int(time.time()))
+    sig_str = f'timestamp={ts}{CLOUDINARY_SECRET}'
+    signature = hashlib.sha1(sig_str.encode()).hexdigest()
+    ext = os.path.splitext(original_filename)[1].lstrip('.') or 'png'
+    mime_map = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
+                'gif': 'image/gif', 'webp': 'image/webp'}
+    mime = mime_map.get(ext.lower(), 'image/png')
+    b64 = base64.b64encode(file_bytes).decode()
+    data_uri = f'data:{mime};base64,{b64}'
+    post_data = urlencode({
+        'file': data_uri,
+        'api_key': CLOUDINARY_KEY,
+        'timestamp': ts,
+        'signature': signature,
+    }).encode()
+    try:
+        url = f'https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD}/image/upload'
+        req = urllib.request.Request(url, data=post_data)
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read())
+            return result.get('secure_url')
+    except Exception as e:
+        print(f'Cloudinary upload failed: {e}')
+        return None
 
 def check_auth(handler):
     """Returns True if the request has valid admin credentials."""
@@ -150,13 +182,17 @@ class Handler(SimpleHTTPRequestHandler):
             if not filename or file_bytes is None:
                 self.send_json({'error': 'no file'}, 400)
                 return
-            ext = os.path.splitext(filename)[1] or '.png'
-            safe_name = str(uuid.uuid4())[:8] + ext
-            dest = os.path.join(UPLOAD_DIR, safe_name)
-            with open(dest, 'wb') as f:
-                f.write(file_bytes)
-            github_push(f'assets/portfolio/{safe_name}', file_bytes, 'Upload image via dashboard')
-            self.send_json({'path': 'assets/portfolio/' + safe_name})
+            cdn_url = cloudinary_upload(file_bytes, filename)
+            if cdn_url:
+                self.send_json({'path': cdn_url})
+            else:
+                ext = os.path.splitext(filename)[1] or '.png'
+                safe_name = str(uuid.uuid4())[:8] + ext
+                dest = os.path.join(UPLOAD_DIR, safe_name)
+                with open(dest, 'wb') as f:
+                    f.write(file_bytes)
+                github_push(f'assets/portfolio/{safe_name}', file_bytes, 'Upload image via dashboard')
+                self.send_json({'path': 'assets/portfolio/' + safe_name})
 
         elif parsed.path == '/api/upload-pdf':
             raw = self.rfile.read(cl)

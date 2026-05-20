@@ -544,14 +544,14 @@
 
       const logoPath = data.cards?.music?.logoImage;
       if (logoPath) {
-        document.getElementById('music-logo-img').src = '/' + logoPath;
+        document.getElementById('music-logo-img').src = logoPath.startsWith('http') ? logoPath : '/' + logoPath;
         document.getElementById('music-logo-wrap').style.display = 'block';
       }
       // Photo section
       const heroImg = data.music?.heroImage;
       if (heroImg) {
         const img = document.getElementById('photo-section-img');
-        img.src = '/' + heroImg;
+        img.src = heroImg.startsWith('http') ? heroImg : '/' + heroImg;
         img.style.display = 'block';
         document.getElementById('photo-section-placeholder').style.display = 'none';
       }
@@ -561,7 +561,7 @@
         document.getElementById('album-name').textContent = album.name;
         document.getElementById('album-year').textContent = album.year || '';
         if (album.cover) {
-          document.getElementById('album-cover-img').src = '/' + album.cover;
+          document.getElementById('album-cover-img').src = album.cover.startsWith('http') ? album.cover : '/' + album.cover;
           document.getElementById('album-cover-placeholder').style.display = 'none';
         }
         const tracksEl = document.getElementById('album-tracks');

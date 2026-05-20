@@ -605,7 +605,7 @@ function magneticLogo(card, logo) {
       const cm = data.cards?.music  || {};
 
       // ── Hero photo
-      if(h.photo) document.getElementById('hero-photo').src = '/' + h.photo;
+      if(h.photo) document.getElementById('hero-photo').src = h.photo.startsWith('http') ? h.photo : '/' + h.photo;
 
       // ── Hero name
       if(h.nameFirst) document.getElementById('n1').textContent = h.nameFirst;

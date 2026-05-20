@@ -508,7 +508,7 @@
     grid.innerHTML = projects.map((p, i) => `
       <div class="item js-item" data-id="${p.id}" data-cat="${p.category}">
         <div class="item-img-wrap">
-          <img src="${p.image}" alt="${p.name}" loading="lazy">
+          <img src="${p.image && p.image.startsWith('http') ? p.image : '/' + p.image}" alt="${p.name}" loading="lazy">
         </div>
         <div class="item-content">
           <span class="item-num">${String(i+1).padStart(2,'0')}</span>
@@ -575,7 +575,7 @@
     // Logo
     const logoPath = data.cards?.design?.logoImage;
     if (logoPath) {
-      document.getElementById('design-logo-img').src = '/' + logoPath;
+      document.getElementById('design-logo-img').src = logoPath.startsWith('http') ? logoPath : '/' + logoPath;
       document.getElementById('design-logo-wrap').style.display = 'block';
     }
 
