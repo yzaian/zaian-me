@@ -42,7 +42,7 @@
     "eyebrow": "Brand Designer · Art Director · Visual Systems",
     "headingLine1": "Brand",
     "headingLine2": "Designer.",
-    "bio": "9 years crafting brand identities, visual systems, and digital experiences across Egypt, UAE, KSA, Qatar & Cyprus.",
+    "bio": "I'm a graphic designer based in Cairo, with 10+ years in the media industry. Design, for me, is about crafting identities that speak before words do — with intention, precision, and no limits.",
     "stats": [
       "9+ Years Experience",
       "50+ Brands Created",
@@ -166,7 +166,7 @@
     "eyebrow": "Music Producer · Composer · Artist",
     "genres": "Electronic · Ambient · Cinematic",
     "location": "Cairo · Available Worldwide",
-    "bio": "Beyond the screen, Yahia Zaian explores sound as another form of visual storytelling — crafting original compositions, ambient textures, and produced tracks that blend emotion with structure.",
+    "bio": "I'm a music producer from Cairo, exploring sound as a way to connect with my thoughts and emotions. Raw, reflective, vibe-driven — every beat says what words can't. If you feel it, it's yours.",
     "marquee": "Electronic ✦ Ambient ✦ Cinematic ✦ Sound Design ✦ Composition ✦ Production ✦ Mixing ✦ Mastering ✦",
     "platforms": [
       {
@@ -235,5 +235,9 @@
         }
       ]
     }
+  },
+  "documents": {
+    "portfolioUpdatedAt": "May 2026",
+    "cvUpdatedAt": "May 2026"
   }
 }
