@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Yahia Zaian</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,700;0,900;1,900&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --black: #000; --white: #fff;
+      --border: rgba(255,255,255,.08);
+      --muted:  rgba(255,255,255,.36);
+    }
+    html { overflow-x: hidden; }
+    body {
+      background: var(--black); color: var(--white);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── CURTAIN ────────────────────────────── */
+    #curtain { position: fixed; inset: 0; z-index: 9000; background: var(--black); pointer-events: none; }
+
+    /* ─── NAV ────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.6rem 3rem;
+      mix-blend-mode: normal;
+    }
+    nav::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.7) 55%, transparent 100%);
+      pointer-events: none; z-index: -1;
+    }
+    .nav-frame {
+      display: flex; align-items: center;
+      border: 1px solid rgba(255,255,255,.32);
+      border-radius: 8px;
+    }
+    .nav-frame-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      background: none; border: none; cursor: pointer;
+      color: var(--white); text-decoration: none;
+      opacity: .55; transition: opacity .2s, background .25s;
+    }
+    .nav-frame-btn:hover { opacity: 1; background: rgba(255,255,255,.07); }
+    .nav-frame-sep {
+      width: 1px; height: 18px;
+      background: rgba(255,255,255,.18); flex-shrink: 0; align-self: center;
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--white); text-decoration: none;
+      font-size: .68rem; letter-spacing: .25em;
+      text-transform: uppercase; opacity: .45;
+      transition: opacity .25s;
+    }
+    .nav-links a:hover { opacity: 1; }
+    @media (max-width: 600px) { .nav-links { gap: 1.2rem; } .nav-links a { font-size: .6rem; letter-spacing: .15em; } }
+    @media (max-width: 400px) { .nav-links { gap: .7rem; } }
+
+    /* ─── TEXT REVEAL ────────────────────────── */
+    .r-wrap { display: block; overflow: hidden; }
+    .r-inner { display: block; transform: translateY(105%); }
+
+    /* ─── HERO ───────────────────────────────── */
+    .hero {
+      min-height: 52vh; padding-top: 80px;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding-left: 3rem; padding-right: 3rem; padding-bottom: 4rem;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .hero-eyebrow {
+      font-size: .62rem; letter-spacing: .38em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 1.8rem;
+      display: flex; align-items: center; gap: .8rem;
+    }
+    .hero-eyebrow::before { content: ''; width: 20px; height: 1px; background: currentColor; }
+    .hero-heading {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 900; font-style: italic;
+      font-size: clamp(4rem, 11vw, 11rem);
+      line-height: .86; letter-spacing: -.04em;
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+
+    /* ─── CONTACT GRID ───────────────────────── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin: 4rem 3rem;
+      border: 1px solid var(--border);
+    }
+
+    .contact-card {
+      background: var(--black);
+      display: flex; flex-direction: column;
+      align-items: flex-start;
+      padding: 2.8rem 2.4rem;
+      text-decoration: none; color: var(--white);
+      position: relative; overflow: hidden;
+      transition: color .4s;
+      gap: 1.4rem;
+    }
+    .contact-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--white);
+      transform: scaleY(0); transform-origin: bottom;
+      transition: transform .55s cubic-bezier(.76,0,.24,1);
+      z-index: 0;
+    }
+    .contact-card:hover::before { transform: scaleY(1); }
+    .contact-card:hover { color: var(--black); }
+    .contact-card > * { position: relative; z-index: 1; }
+
+    .card-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+    .card-body { flex: 1; }
+    .card-label {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 900; font-size: 1.1rem;
+      letter-spacing: -.02em;
+      margin-bottom: .4rem;
+    }
+    .card-handle {
+      font-size: .62rem; letter-spacing: .18em;
+      text-transform: uppercase; opacity: .4;
+      line-height: 1.5;
+    }
+    .card-arrow {
+      font-size: 1.1rem; opacity: .3;
+      transition: transform .35s, opacity .35s;
+      align-self: flex-end;
+    }
+    .contact-card:hover .card-arrow { transform: translate(4px,-4px); opacity: 1; }
+
+    /* ─── AVAILABILITY ───────────────────────── */
+    .avail {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--border);
+      margin: 0 3rem 4rem;
+      border: 1px solid var(--border);
+    }
+    .avail-l {
+      padding: 4rem 3rem;
+      border-right: 1px solid var(--border);
+    }
+    .avail-label {
+      font-size: .62rem; letter-spacing: .3em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+    .avail-status {
+      display: flex; align-items: center; gap: .8rem;
+      font-family: 'Archivo', sans-serif;
+      font-weight: 900; font-size: clamp(1.5rem, 3vw, 2.5rem);
+      letter-spacing: -.03em;
+    }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--white); flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.7); }
+    }
+    .avail-r {
+      padding: 4rem 3rem;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .avail-note {
+      font-size: .9rem; line-height: 1.8;
+      color: var(--muted); max-width: 360px;
+    }
+
+    /* ─── FOOTER ─────────────────────────────── */
+    footer {
+      padding: 1.8rem 3rem;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+    }
+    footer span { font-size: .68rem; color: var(--muted); }
+    footer a {
+      font-size: .68rem; color: var(--white);
+      text-decoration: none; letter-spacing: .15em;
+      text-transform: uppercase; opacity: .3;
+      transition: opacity .2s;
+    }
+    footer a:hover { opacity: 1; }
+
+    /* ─── RESPONSIVE ─────────────────────────── */
+    @media (max-width: 1100px) {
+      .contact-grid { grid-template-columns: repeat(2, 1fr); margin: 3rem 2rem; }
+    }
+    @media (max-width: 960px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-center { display: none; }
+      .hero { padding: 6rem 1.5rem 3rem; }
+      .contact-grid { grid-template-columns: repeat(2, 1fr); margin: 2.5rem 1.5rem; }
+      .avail { grid-template-columns: 1fr; margin: 0 1.5rem 3rem; }
+      .avail-l { border-right: none; border-bottom: 1px solid var(--border); padding: 3rem 1.5rem; }
+      .avail-r { padding: 3rem 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+    @media (max-width: 540px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="curtain"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-frame">
+    <a class="nav-frame-btn" href="index.html" onclick="navigate(event,'index.html')" title="Home">
+      <svg width="18" height="16" viewBox="0 0 22 20" fill="none"><path d="M1 9L11 1L21 9V19H14V13H8V19H1V9Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </a>
+    <span class="nav-frame-sep"></span>
+    <button class="nav-frame-btn" onclick="history.back()" title="Go back">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <ul class="nav-links">
+    <li><a href="design.html" onclick="navigate(event,'design.html')">Design</a></li>
+    <li><a href="music.html" onclick="navigate(event,'music.html')">Music</a></li>
+    <li><a href="contact.html" onclick="navigate(event,'contact.html')">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="r-wrap"><span class="r-inner" id="ey">Get in touch</span></span>
+  </div>
+  <h1 class="hero-heading">
+    <span class="r-wrap"><span class="r-inner" id="h1">Let's</span></span>
+    <span class="r-wrap"><span class="r-inner" id="h2">Talk.</span></span>
+  </h1>
+</section>
+
+<!-- CONTACT GRID -->
+<div class="contact-grid" id="contact-grid"></div>
+
+<!-- AVAILABILITY -->
+<div class="avail js-up">
+  <div class="avail-l">
+    <div class="avail-label">✦ Availability</div>
+    <div class="avail-status">
+      <span class="status-dot"></span>
+      <span id="avail-status-text">Open for Work</span>
+    </div>
+  </div>
+  <div class="avail-r">
+    <p class="avail-note" id="avail-note-text">
+      Available for brand identity projects, art direction, and music production collaborations. Based in Cairo — working globally.
+    </p>
+  </div>
+</div>
+
+<footer>
+  <span>Yahia Zaian © 2025</span>
+  <a href="index.html" onclick="navigate(event,'index.html')">← Back to Home</a>
+</footer>
+
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── Lenis ── */
+  const lenis = new Lenis({ duration: 1.3, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(time => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  /* ── Curtain in ── */
+  gsap.set('#curtain', { scaleY: 1, transformOrigin: 'top' });
+  gsap.to('#curtain', { scaleY: 0, duration: .9, ease: 'power3.inOut', delay: .05 });
+
+  /* ── Nav ── */
+  gsap.from('#nav', { y: -20, opacity: 0, duration: .7, ease: 'power2.out', delay: .8 });
+
+  /* ── Hero reveals ── */
+  const tl = gsap.timeline({ delay: 1.0 });
+  tl
+    .to('#ey',  { y: 0, duration: .65, ease: 'power3.out' })
+    .to('#h1',  { y: 0, duration: 1,   ease: 'power3.out' }, '-=.35')
+    .to('#h2',  { y: 0, duration: 1,   ease: 'power3.out' }, '-=.72');
+
+  /* ── Load contact data ── */
+  const CARDS_DEF = [
+    { label: 'Email',     icon: '✉️', field: 'email',     prefix: 'mailto:',                  isExternal: false },
+    { label: 'Phone',     icon: '📞', field: 'phone',     prefix: 'tel:',                      isExternal: false },
+    { label: 'LinkedIn',  icon: '💼', field: 'linkedin',  prefix: '',                          isExternal: true  },
+    { label: 'Behance',   icon: '🎨', field: 'behance',   prefix: '',                          isExternal: true  },
+    { label: 'Instagram', icon: '📸', field: 'instagram', prefix: '',                          isExternal: true  },
+  ];
+  fetch('/api/content')
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .catch(() => fetch('/content.json').then(r => r.json()))
+    .then(data => {
+      const c = data.contact || {};
+      const grid = document.getElementById('contact-grid');
+      grid.innerHTML = CARDS_DEF.map(def => {
+        const val = c[def.field] || '';
+        const href = val ? (def.prefix + val) : '#';
+        const handle = def.field === 'email' ? val
+          : def.field === 'phone' ? val
+          : val.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        const target = def.isExternal ? ' target="_blank"' : '';
+        return `<a class="contact-card js-card" href="${href}"${target}>
+          <span class="card-icon">${def.icon}</span>
+          <div class="card-body">
+            <div class="card-label">${def.label}</div>
+            <div class="card-handle">${handle || '—'}</div>
+          </div>
+          <span class="card-arrow">↗</span>
+        </a>`;
+      }).join('');
+      if (c.availabilityStatus) document.getElementById('avail-status-text').textContent = c.availabilityStatus;
+      if (c.availabilityNote)   document.getElementById('avail-note-text').textContent   = c.availabilityNote;
+      // re-init card animations
+      gsap.from('.js-card', {
+        scrollTrigger: { trigger: '#contact-grid', start: 'top 85%' },
+        y: 40, opacity: 0, duration: .65, stagger: .07, ease: 'power2.out'
+      });
+    })
+    .catch(() => {});
+
+  /* ── Availability ── */
+  gsap.from('.js-up', {
+    scrollTrigger: { trigger: '.js-up', start: 'top 88%' },
+    y: 30, opacity: 0, duration: .7, ease: 'power2.out'
+  });
+
+  /* ── Page transition ── */
+  function navigate(e, url) {
+    e.preventDefault();
+    lenis.stop();
+    gsap.to('#curtain', {
+      scaleY: 1, transformOrigin: 'bottom',
+      duration: .65, ease: 'power3.inOut',
+      onComplete: () => window.location.href = url
+    });
+  }
+  window.navigate = navigate;
+</script>
+</body>
+</html>

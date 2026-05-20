@@ -1,0 +1,239 @@
+{
+  "hero": {
+    "name": "YAHIA ZAIAN",
+    "nameFirst": "Yahia",
+    "nameLast": "Zaian",
+    "eyebrow": "Cairo, Egypt · 2025",
+    "location": "Cairo, Egypt",
+    "year": "2025",
+    "roles": [
+      "Brand Designer",
+      "Music Producer"
+    ],
+    "bio": "9+ years crafting brand identities and sonic experiences — from Cairo to the world.",
+    "photo": "assets/portfolio/68e2fd94.jpg",
+    "marquee": [
+      "Brand Designer",
+      "Art Director",
+      "Music Producer",
+      "Cairo, Egypt",
+      "9+ Years",
+      "50+ Brands",
+      "MENA Region",
+      "UI/UX"
+    ]
+  },
+  "cards": {
+    "design": {
+      "logoImage": "assets/portfolio/b74cbb79.png",
+      "logo": "7.",
+      "title": "Graphic Designer",
+      "desc": "9 years crafting brand identities, visual systems, and art direction for companies across Egypt, UAE, KSA, Qatar & Cyprus.",
+      "sub": "Brand · UI/UX · Art Direction"
+    },
+    "music": {
+      "logoImage": "assets/portfolio/938b9480.png",
+      "title": "Music Producer",
+      "desc": "Producing original compositions, ambient textures & electronic tracks — blending emotion with structure. Available on Spotify & SoundCloud.",
+      "sub": "Composer · Artist · Sound"
+    }
+  },
+  "design": {
+    "eyebrow": "Brand Designer · Art Director · Visual Systems",
+    "headingLine1": "Brand",
+    "headingLine2": "Designer.",
+    "bio": "9 years crafting brand identities, visual systems, and digital experiences across Egypt, UAE, KSA, Qatar & Cyprus.",
+    "stats": [
+      "9+ Years Experience",
+      "50+ Brands Created",
+      "Cairo · UAE · KSA · Qatar · Cyprus"
+    ],
+    "marquee": "Brand Identity ✦ Visual Systems ✦ Art Direction ✦ Logo Design ✦ Social Media ✦ Key Visual ✦ UI / UX ✦ Typography ✦ Motion Graphics ✦",
+    "availabilityText": "Open to brand identity projects, art direction, and long-term creative partnerships.",
+    "projects": [
+      {
+        "id": "1",
+        "name": "Polex",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/polex-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "2",
+        "name": "Hero's",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/heros-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "3",
+        "name": "Misrology",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/misrology-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "4",
+        "name": "Indexcel",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/indexcel-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "5",
+        "name": "Sporship",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/sporship-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "6",
+        "name": "Redsea Homes",
+        "category": "branding",
+        "categoryLabel": "Branding",
+        "image": "assets/portfolio/redsea-branding.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "7",
+        "name": "Manateq",
+        "category": "social",
+        "categoryLabel": "Social Media · Qatar 🇶🇦",
+        "image": "assets/portfolio/manateq-social.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "8",
+        "name": "Metro Al Riyadh",
+        "category": "social",
+        "categoryLabel": "Social Media · KSA 🇸🇦",
+        "image": "assets/portfolio/metro-social.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "9",
+        "name": "UAE Game Makers",
+        "category": "keyvisual",
+        "categoryLabel": "Key Visual · UAE 🇦🇪",
+        "image": "assets/portfolio/uae-games-kv.png",
+        "link": "",
+        "description": "",
+        "images": []
+      },
+      {
+        "id": "10",
+        "name": "Polex App",
+        "category": "uiux",
+        "categoryLabel": "UI/UX · Mobile",
+        "image": "assets/portfolio/polex-uiux.png",
+        "link": "",
+        "description": "",
+        "images": []
+      }
+    ]
+  },
+  "contact": {
+    "email": "Yahiazaian@gmail.com",
+    "phone": "+201011219558",
+    "linkedin": "https://www.linkedin.com/in/yahiazaian",
+    "behance": "https://www.behance.net/zaian",
+    "instagram": "https://www.instagram.com/byzaian",
+    "availabilityStatus": "Open for Work",
+    "availabilityNote": "Available for brand identity projects, art direction, and music production collaborations. Based in Cairo — working globally."
+  },
+  "music": {
+    "eyebrow": "Music Producer · Composer · Artist",
+    "genres": "Electronic · Ambient · Cinematic",
+    "location": "Cairo · Available Worldwide",
+    "bio": "Beyond the screen, Yahia Zaian explores sound as another form of visual storytelling — crafting original compositions, ambient textures, and produced tracks that blend emotion with structure.",
+    "marquee": "Electronic ✦ Ambient ✦ Cinematic ✦ Sound Design ✦ Composition ✦ Production ✦ Mixing ✦ Mastering ✦",
+    "platforms": [
+      {
+        "id": "1",
+        "icon": "🎵",
+        "name": "Spotify",
+        "sub": "Stream my music",
+        "url": "https://open.spotify.com/artist/2kJtIF7JWjHBUaXqjowhGG"
+      },
+      {
+        "id": "2",
+        "icon": "☁️",
+        "name": "SoundCloud",
+        "sub": "All tracks & demos",
+        "url": "https://soundcloud.com/yzaian"
+      },
+      {
+        "id": "3",
+        "icon": "▶️",
+        "name": "YouTube",
+        "sub": "Videos & visuals",
+        "url": "https://www.youtube.com/channel/UCuCeBwKD9SBakbfOMuP7Ikw"
+      },
+      {
+        "id": "4",
+        "icon": "📸",
+        "name": "Instagram",
+        "sub": "@yzaian",
+        "url": "https://www.instagram.com/yzaian/"
+      }
+    ],
+    "heroImage": "",
+    "latestAlbum": {
+      "name": "Eternal City",
+      "year": "2025",
+      "cover": "",
+      "tracks": [
+        {
+          "title": "Eternal City",
+          "duration": "3:42"
+        },
+        {
+          "title": "Night Drive",
+          "duration": "2:58"
+        },
+        {
+          "title": "Cairo Nights",
+          "duration": "4:05"
+        }
+      ],
+      "links": [
+        {
+          "icon": "🎵",
+          "platform": "Spotify",
+          "url": "https://open.spotify.com/artist/2kJtIF7JWjHBUaXqjowhGG"
+        },
+        {
+          "icon": "☁️",
+          "platform": "SoundCloud",
+          "url": "https://soundcloud.com/yzaian"
+        },
+        {
+          "icon": "🎶",
+          "platform": "Apple Music",
+          "url": "#"
+        }
+      ]
+    }
+  }
+}

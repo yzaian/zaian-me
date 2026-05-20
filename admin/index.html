@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YZ · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c0c;--sidebar:#111;--card:#1a1a1a;--card2:#222;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8e8e8;--muted:rgba(255,255,255,.38);--accent:#fff;
+  --danger:#ff4444;--success:#22c55e;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;display:flex}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:210px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;}
+.sidebar-brand{padding:1.3rem 1.1rem .9rem;border-bottom:1px solid var(--border);font-weight:600;font-size:.82rem;letter-spacing:.08em;display:flex;align-items:center;gap:.55rem;color:var(--accent);}
+.brand-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+.sidebar-nav{flex:1;padding:.5rem .5rem;display:flex;flex-direction:column;overflow-y:auto;}
+.nav-group{margin-bottom:.3rem;}
+.nav-group-label{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:.5rem .7rem .3rem;}
+.nav-item{display:flex;align-items:center;gap:.65rem;padding:.6rem .8rem;border-radius:6px;cursor:pointer;transition:background .15s,color .15s;color:var(--muted);font-weight:500;font-size:.8rem;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.nav-item.active{background:rgba(255,255,255,.09);color:var(--accent);}
+.nav-icon{font-size:.95rem;width:17px;text-align:center;}
+.sidebar-footer{padding:.7rem 1rem .9rem;border-top:1px solid var(--border);}
+.preview-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.5rem;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:.73rem;font-weight:500;text-decoration:none;transition:background .15s;}
+.preview-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ─── MAIN ─── */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{padding:.8rem 1.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-size:.88rem;font-weight:600;color:var(--accent);}
+.save-btn{padding:.42rem 1rem;border-radius:6px;background:var(--accent);color:#000;border:none;font-size:.74rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.save-btn:hover{opacity:.85;}
+.save-btn:disabled{opacity:.4;cursor:not-allowed;}
+.content{flex:1;overflow-y:auto;padding:1.6rem;}
+
+/* ─── SECTIONS ─── */
+.section{display:none;}
+.section.active{display:block;}
+.section-header{margin-bottom:1.3rem;}
+.section-title{font-size:1rem;font-weight:600;margin-bottom:.2rem;}
+.section-sub{font-size:.72rem;color:var(--muted);}
+
+/* ─── CARDS ─── */
+.card-section{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:1.1rem 1.2rem;margin-bottom:.9rem;}
+.card-section-title{font-size:.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.9rem;}
+
+/* ─── FORM ─── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem;}
+.form-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+.form-row.single{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:.35rem;}
+.field label{font-size:.68rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.field input,.field textarea,.field select{background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.55rem .7rem;color:var(--text);font-size:.8rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;resize:vertical;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,255,255,.35);}
+.field textarea{min-height:72px;}
+.field select option{background:#1a1a1a;}
+
+/* ─── PHOTO ─── */
+.photo-area{display:flex;align-items:center;gap:1.1rem;background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:.9rem 1.1rem;}
+.photo-preview{width:56px;height:72px;border-radius:4px;object-fit:cover;border:1px solid var(--border2);background:#222;}
+.photo-actions{display:flex;flex-direction:column;gap:.45rem;}
+.upload-btn{padding:.38rem .8rem;border-radius:5px;background:rgba(255,255,255,.08);border:1px solid var(--border2);color:var(--text);font-size:.71rem;font-weight:500;cursor:pointer;transition:background .15s;font-family:'Inter',sans-serif;}
+.upload-btn:hover{background:rgba(255,255,255,.14);}
+.photo-note{font-size:.66rem;color:var(--muted);}
+
+/* ─── TAGS ─── */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.25rem;}
+.tag{display:flex;align-items:center;gap:.35rem;background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:.22rem .65rem;font-size:.7rem;}
+.tag-del{cursor:pointer;color:var(--muted);font-size:.85rem;line-height:1;}
+.tag-del:hover{color:var(--danger);}
+.tag-add{display:flex;gap:.45rem;margin-top:.55rem;align-items:center;}
+.tag-add input{flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem .65rem;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;}
+.tag-add input:focus{border-color:rgba(255,255,255,.3);}
+
+/* ─── STATS LIST ─── */
+.stats-list{display:flex;flex-direction:column;gap:.45rem;}
+.stat-row{display:flex;align-items:center;gap:.5rem;}
+.stat-row input{flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem .65rem;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;outline:none;}
+.stat-row input:focus{border-color:rgba(255,255,255,.3);}
+.stat-del{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--muted);cursor:pointer;font-size:.85rem;flex-shrink:0;}
+.stat-del:hover{color:var(--danger);border-color:var(--danger);}
+.add-stat-btn{margin-top:.45rem;padding:.4rem .75rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text);font-size:.71rem;font-weight:500;cursor:pointer;}
+.add-stat-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ─── PROJECTS GRID ─── */
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;}
+.proj-card{background:var(--card);border:1px solid var(--border2);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.proj-card:hover{border-color:rgba(255,255,255,.25);transform:translateY(-2px);}
+.proj-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#1a1a1a;display:block;}
+.proj-card-body{padding:.65rem .8rem;}
+.proj-card-cat{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;}
+.proj-card-name{font-size:.84rem;font-weight:600;}
+.proj-card-desc{font-size:.7rem;color:var(--muted);margin-top:.25rem;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.proj-card-del{position:absolute;top:.45rem;right:.45rem;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.15);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.78rem;cursor:pointer;opacity:0;transition:opacity .15s;z-index:2;}
+.proj-card:hover .proj-card-del{opacity:1;}
+.add-proj-btn{border:1px dashed var(--border2);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;cursor:pointer;aspect-ratio:4/3;background:transparent;color:var(--muted);transition:background .15s,border-color .15s,color .15s;font-family:'Inter',sans-serif;}
+.add-proj-btn:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.2);color:var(--text);}
+.add-proj-icon{font-size:1.4rem;}
+.add-proj-btn span{font-size:.75rem;font-weight:500;}
+
+/* ─── CONTACT LIST ─── */
+.contact-rows{display:flex;flex-direction:column;gap:.6rem;}
+.contact-row{background:var(--card);border:1px solid var(--border2);border-radius:7px;padding:.85rem 1.1rem;display:grid;grid-template-columns:110px 1fr;gap:.75rem;align-items:center;}
+.contact-lbl{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:.45rem;}
+
+/* ─── MODAL ─── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.78);align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--sidebar);border:1px solid var(--border2);border-radius:10px;width:540px;max-width:94vw;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-weight:600;font-size:.9rem;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.15rem;cursor:pointer;padding:.2rem;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:1.2rem;}
+.modal-footer{padding:.85rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.55rem;}
+.btn-ghost{padding:.4rem .85rem;border-radius:5px;background:transparent;border:1px solid var(--border2);color:var(--text);font-size:.73rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-ghost:hover{background:rgba(255,255,255,.06);}
+.btn-primary{padding:.4rem .9rem;border-radius:5px;background:var(--accent);color:#000;border:none;font-size:.73rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-primary:hover{opacity:.88;}
+.proj-img-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:5px;margin-bottom:.75rem;background:#1a1a1a;border:1px solid var(--border2);display:block;}
+.cat-custom-wrap{display:none;margin-top:.4rem;}
+.cat-custom-wrap.show{display:block;}
+
+/* ─── LOGO UPLOAD ─── */
+.logo-upload-row{display:flex;align-items:center;gap:1.1rem;background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:.9rem 1.1rem;}
+.logo-preview-wrap{display:flex;flex-direction:column;align-items:center;gap:.35rem;flex-shrink:0;}
+.logo-preview{width:80px;height:56px;border-radius:5px;border:1px solid var(--border2);background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.logo-preview img{max-width:100%;max-height:100%;object-fit:contain;}
+.logo-preview-empty{font-size:.65rem;color:var(--muted);text-align:center;}
+.logo-preview-label{font-size:.62rem;color:var(--muted);}
+.logo-upload-actions{display:flex;flex-direction:column;gap:.4rem;}
+
+/* ─── PLATFORM ROWS ─── */
+.platform-edit-row{display:grid;grid-template-columns:48px 1fr 1fr 2fr 28px;gap:.45rem;align-items:center;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:.55rem .75rem;margin-bottom:.4rem;}
+.platform-edit-row input{background:var(--card2);border:1px solid var(--border2);border-radius:4px;padding:.42rem .55rem;color:var(--text);font-size:.76rem;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.platform-edit-row input:focus{border-color:rgba(255,255,255,.35);}
+.platform-icon-inp{text-align:center;font-size:1.15rem;}
+.platform-del-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--muted);cursor:pointer;font-size:.78rem;flex-shrink:0;}
+.platform-del-btn:hover{color:var(--danger);border-color:var(--danger);}
+.pdf-upload-row{display:flex;align-items:center;gap:1.1rem;background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:.9rem 1.1rem;}
+.pdf-status{display:flex;align-items:center;gap:.75rem;flex:1;min-width:0;}
+.pdf-icon{font-size:1.5rem;flex-shrink:0;}
+.pdf-name{font-size:.78rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pdf-meta{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
+.pdf-actions{display:flex;flex-direction:column;gap:.3rem;align-items:flex-end;flex-shrink:0;}
+.platform-col-labels{display:grid;grid-template-columns:48px 1fr 1fr 2fr 28px;gap:.45rem;padding:0 .75rem;margin-bottom:.3rem;}
+.platform-col-labels span{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.add-platform-btn{margin-top:.55rem;padding:.4rem .75rem;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text);font-size:.71rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;}
+.add-platform-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ─── PHOTO UPLOAD ROW ─── */
+.photo-upload-row{display:flex;gap:1.5rem;align-items:flex-start;padding:1rem 0;}
+.photo-preview-wrap{width:120px;height:120px;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+.photo-upload-actions{display:flex;flex-direction:column;gap:.5rem;}
+.photo-note{font-size:.7rem;color:rgba(255,255,255,.3);}
+
+/* ─── PLATFORM ROW (album tracks/links) ─── */
+.platform-row{display:flex;align-items:center;gap:.45rem;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:.55rem .75rem;margin-bottom:.4rem;}
+.platform-del{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--muted);cursor:pointer;font-size:.78rem;flex-shrink:0;}
+.platform-del:hover{color:var(--danger);border-color:var(--danger);}
+
+/* ─── GALLERY THUMBS ─── */
+.gallery-thumb{position:relative;aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:var(--card2);border:1px solid var(--border2);}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.gallery-thumb-del{position:absolute;top:.25rem;right:.25rem;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.2);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer;z-index:2;}
+.gallery-thumb-del:hover{background:var(--danger);color:#fff;}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:1.4rem;right:1.4rem;z-index:9999;padding:.6rem 1rem;border-radius:7px;font-size:.76rem;font-weight:500;background:var(--success);color:#000;transform:translateY(20px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{background:var(--danger);color:#fff;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand"><div class="brand-dot"></div>YZ Dashboard</div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Home Page</div>
+      <div class="nav-item active" data-section="hero"><span class="nav-icon">🏠</span>Hero & Photo</div>
+      <div class="nav-item" data-section="cards"><span class="nav-icon">🃏</span>Cards Content</div>
+      <div class="nav-item" data-section="marquee-home"><span class="nav-icon">📝</span>Marquee Text</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Design Page</div>
+      <div class="nav-item" data-section="design-hero"><span class="nav-icon">✏️</span>Hero Text</div>
+      <div class="nav-item" data-section="projects"><span class="nav-icon">🎨</span>Projects</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Music Page</div>
+      <div class="nav-item" data-section="music"><span class="nav-icon">🎵</span>Music Content</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Contact Page</div>
+      <div class="nav-item" data-section="contact"><span class="nav-icon">📞</span>Contact Info</div>
+      <div class="nav-item" data-section="availability"><span class="nav-icon">🟢</span>Availability</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Files</div>
+      <div class="nav-item" data-section="documents"><span class="nav-icon">📄</span>Portfolio & CV</div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <a class="preview-btn" href="/" target="_blank">↗ Preview Website</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Hero & Photo</span>
+    <button class="save-btn" id="save-btn">Save Changes</button>
+  </div>
+  <div class="content">
+
+    <!-- ── HERO ── -->
+    <section class="section active" id="sec-hero">
+      <div class="section-header"><div class="section-title">Hero & Photo</div><div class="section-sub">Main hero on the home page</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Photo</div>
+        <div class="photo-area">
+          <img class="photo-preview" id="hero-photo-preview" src="" alt="">
+          <div class="photo-actions">
+            <label class="upload-btn" for="hero-photo-file">Upload New Photo</label>
+            <input type="file" id="hero-photo-file" accept="image/*" style="display:none">
+            <div class="photo-note">Portrait · min 600×800px recommended</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Identity</div>
+        <div class="form-row">
+          <div class="field"><label>First Name</label><input type="text" id="hero-name-first"></div>
+          <div class="field"><label>Last Name</label><input type="text" id="hero-name-last"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Location</label><input type="text" id="hero-location"></div>
+          <div class="field"><label>Year</label><input type="text" id="hero-year"></div>
+        </div>
+        <div class="form-row single">
+          <div class="field"><label>Bio / Tagline</label><textarea id="hero-bio" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Roles (bullet list under name)</div>
+        <div class="tags-wrap" id="roles-tags"></div>
+        <div class="tag-add">
+          <input type="text" id="role-input" placeholder="e.g. Brand Designer">
+          <button class="upload-btn" id="role-add-btn">+ Add</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CARDS ── -->
+    <section class="section" id="sec-cards">
+      <div class="section-header"><div class="section-title">Home Cards</div><div class="section-sub">The two main cards linking to Design & Music pages</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Design Card</div>
+        <div class="logo-upload-row">
+          <div class="logo-preview-wrap">
+            <div class="logo-preview" id="card-design-logo-preview"></div>
+            <div class="logo-preview-label">Current Logo</div>
+          </div>
+          <div class="logo-upload-actions">
+            <label class="upload-btn" for="card-design-logo-file">Upload Logo Image</label>
+            <input type="file" id="card-design-logo-file" accept="image/*" style="display:none">
+            <div class="photo-note">PNG/SVG with transparency recommended</div>
+            <button class="upload-btn" id="card-design-logo-clear" style="margin-top:.3rem;color:rgba(255,100,100,.8);">✕ Remove Image (use text)</button>
+          </div>
+        </div>
+        <div class="form-row single" style="margin-top:.8rem"><div class="field"><label>Logo Text (used if no image uploaded)</label><input type="text" id="card-design-logo" placeholder="e.g. 7."></div></div>
+        <div class="form-row single"><div class="field"><label>Title</label><input type="text" id="card-design-title"></div></div>
+        <div class="form-row single"><div class="field"><label>Description</label><textarea id="card-design-desc" rows="3"></textarea></div></div>
+        <div class="form-row single"><div class="field"><label>Sub Label (bottom)</label><input type="text" id="card-design-sub"></div></div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Music Card</div>
+        <div class="logo-upload-row">
+          <div class="logo-preview-wrap">
+            <div class="logo-preview" id="card-music-logo-preview"></div>
+            <div class="logo-preview-label">Current Logo</div>
+          </div>
+          <div class="logo-upload-actions">
+            <label class="upload-btn" for="card-music-logo-file">Upload Logo Image</label>
+            <input type="file" id="card-music-logo-file" accept="image/*" style="display:none">
+            <div class="photo-note">PNG/SVG with transparency recommended</div>
+            <button class="upload-btn" id="card-music-logo-clear" style="margin-top:.3rem;color:rgba(255,100,100,.8);">✕ Remove Image (use text)</button>
+          </div>
+        </div>
+        <div class="form-row single"><div class="field"><label>Title</label><input type="text" id="card-music-title"></div></div>
+        <div class="form-row single"><div class="field"><label>Description</label><textarea id="card-music-desc" rows="3"></textarea></div></div>
+        <div class="form-row single"><div class="field"><label>Sub Label (bottom)</label><input type="text" id="card-music-sub"></div></div>
+      </div>
+    </section>
+
+    <!-- ── MARQUEE HOME ── -->
+    <section class="section" id="sec-marquee-home">
+      <div class="section-header"><div class="section-title">Home Marquee</div><div class="section-sub">Scrolling ticker below the hero</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Items (drag order not supported — reorder by delete & re-add)</div>
+        <div class="tags-wrap" id="home-marquee-tags"></div>
+        <div class="tag-add">
+          <input type="text" id="home-marquee-input" placeholder="e.g. Art Director">
+          <button class="upload-btn" id="home-marquee-add">+ Add</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DESIGN HERO ── -->
+    <section class="section" id="sec-design-hero">
+      <div class="section-header"><div class="section-title">Design Page — Hero</div><div class="section-sub">Top hero section on the design page</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Heading</div>
+        <div class="form-row">
+          <div class="field"><label>Line 1</label><input type="text" id="design-h1"></div>
+          <div class="field"><label>Line 2</label><input type="text" id="design-h2"></div>
+        </div>
+        <div class="form-row single"><div class="field"><label>Eyebrow (small text above heading)</label><input type="text" id="design-eyebrow"></div></div>
+        <div class="form-row single"><div class="field"><label>Bio</label><textarea id="design-bio" rows="3"></textarea></div></div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Stats (shown at the bottom of hero)</div>
+        <div class="stats-list" id="design-stats-list"></div>
+        <button class="add-stat-btn" id="add-stat-btn">+ Add Stat</button>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Marquee / Skills ticker</div>
+        <div class="form-row single"><div class="field"><label>Paste full marquee text (items separated by ✦)</label><textarea id="design-marquee" rows="3"></textarea></div></div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Availability note (bottom contact section)</div>
+        <div class="form-row single"><div class="field"><textarea id="design-avail" rows="2"></textarea></div></div>
+      </div>
+    </section>
+
+    <!-- ── PROJECTS ── -->
+    <section class="section" id="sec-projects">
+      <div class="section-header"><div class="section-title">Design Projects</div><div class="section-sub">Click to edit · Hover for delete · Click + to add new</div></div>
+      <div class="projects-grid" id="projects-grid"></div>
+    </section>
+
+    <!-- ── MUSIC ── -->
+    <section class="section" id="sec-music">
+      <div class="section-header"><div class="section-title">Music Page</div><div class="section-sub">All content on the music page</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Hero Photo</div>
+        <div class="photo-upload-row" id="music-hero-photo-row">
+          <div class="photo-preview-wrap">
+            <img id="music-hero-preview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:2px;">
+            <div id="music-hero-empty" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;opacity:.25;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+          </div>
+          <div class="photo-upload-actions">
+            <label class="upload-btn" for="music-hero-file">Upload Hero Photo</label>
+            <input type="file" id="music-hero-file" accept="image/*" style="display:none">
+            <div class="photo-note">Portrait or square photo, will show on the music page hero</div>
+            <button class="upload-btn" id="music-hero-clear" style="margin-top:.5rem;color:rgba(255,100,100,.8);">✕ Remove Photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Identity</div>
+        <div class="form-row single"><div class="field"><label>Eyebrow</label><input type="text" id="music-eyebrow"></div></div>
+        <div class="form-row">
+          <div class="field"><label>Genres</label><input type="text" id="music-genres"></div>
+          <div class="field"><label>Location</label><input type="text" id="music-location"></div>
+        </div>
+        <div class="form-row single"><div class="field"><label>Bio</label><textarea id="music-bio" rows="4"></textarea></div></div>
+        <div class="form-row single"><div class="field"><label>Marquee / Skills</label><textarea id="music-marquee" rows="2"></textarea></div></div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Platforms &amp; Links</div>
+        <div class="platform-col-labels">
+          <span>Icon</span><span>Name</span><span>Sub-label</span><span>URL</span><span></span>
+        </div>
+        <div id="music-platforms-list"></div>
+        <button class="add-platform-btn" id="add-platform-btn">+ Add Platform</button>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Latest Album / Release</div>
+        <div class="form-row">
+          <div class="field"><label>Album / Release Name</label><input type="text" id="album-name-input" placeholder="e.g. Signals"></div>
+          <div class="field" style="max-width:120px"><label>Year</label><input type="text" id="album-year-input" placeholder="2025"></div>
+        </div>
+        <div class="card-section-title" style="margin-top:1.5rem;font-size:.65rem">Album Cover</div>
+        <div class="photo-upload-row" id="album-cover-row">
+          <div class="photo-preview-wrap">
+            <img id="album-cover-preview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:2px;">
+            <div id="album-cover-empty" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;opacity:.25;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+          </div>
+          <div class="photo-upload-actions">
+            <label class="upload-btn" for="album-cover-file">Upload Cover Image</label>
+            <input type="file" id="album-cover-file" accept="image/*" style="display:none">
+            <div class="photo-note">Square album artwork</div>
+            <button class="upload-btn" id="album-cover-clear" style="margin-top:.5rem;color:rgba(255,100,100,.8);">✕ Remove Cover</button>
+          </div>
+        </div>
+        <div class="card-section-title" style="margin-top:1.5rem;font-size:.65rem">Track List</div>
+        <div id="album-tracks-admin"></div>
+        <button class="add-platform-btn" id="add-track-btn">+ Add Track</button>
+        <div class="card-section-title" style="margin-top:1.5rem;font-size:.65rem">Listen Links</div>
+        <div class="platform-col-labels">
+          <span>Icon</span><span>Platform</span><span>URL</span><span></span>
+        </div>
+        <div id="album-links-admin"></div>
+        <button class="add-platform-btn" id="add-album-link-btn">+ Add Link</button>
+      </div>
+    </section>
+
+    <!-- ── CONTACT ── -->
+    <section class="section" id="sec-contact">
+      <div class="section-header"><div class="section-title">Contact Info</div><div class="section-sub">Links & handles on the contact page</div></div>
+      <div class="contact-rows">
+        <div class="contact-row"><div class="contact-lbl"><span>✉️</span>Email</div><div class="field"><input type="text" id="contact-email"></div></div>
+        <div class="contact-row"><div class="contact-lbl"><span>📞</span>Phone</div><div class="field"><input type="text" id="contact-phone"></div></div>
+        <div class="contact-row"><div class="contact-lbl"><span>💼</span>LinkedIn</div><div class="field"><input type="url" id="contact-linkedin"></div></div>
+        <div class="contact-row"><div class="contact-lbl"><span>🎨</span>Behance</div><div class="field"><input type="url" id="contact-behance"></div></div>
+        <div class="contact-row"><div class="contact-lbl"><span>📸</span>Instagram</div><div class="field"><input type="url" id="contact-instagram"></div></div>
+      </div>
+    </section>
+
+    <!-- ── AVAILABILITY ── -->
+    <section class="section" id="sec-availability">
+      <div class="section-header"><div class="section-title">Availability</div><div class="section-sub">Shown at the bottom of the contact page</div></div>
+      <div class="card-section">
+        <div class="form-row single"><div class="field"><label>Status Text</label><input type="text" id="avail-status" placeholder="e.g. Open for Work"></div></div>
+        <div class="form-row single"><div class="field"><label>Description</label><textarea id="avail-note" rows="3"></textarea></div></div>
+      </div>
+    </section>
+
+    <!-- ── DOCUMENTS ── -->
+    <section class="section" id="sec-documents">
+      <div class="section-header"><div class="section-title">Portfolio & CV</div><div class="section-sub">Upload a new PDF to replace the current file — links on the site update instantly</div></div>
+      <div class="card-section">
+        <div class="card-section-title">Portfolio PDF</div>
+        <div class="pdf-upload-row">
+          <div class="pdf-status" id="portfolio-pdf-status">
+            <span class="pdf-icon">📁</span>
+            <div>
+              <div class="pdf-name">yahia-zaian-portfolio.pdf</div>
+              <div class="pdf-meta" id="portfolio-pdf-meta">Loading…</div>
+            </div>
+          </div>
+          <div class="pdf-actions">
+            <label class="upload-btn" for="portfolio-pdf-file">Upload New Portfolio PDF</label>
+            <input type="file" id="portfolio-pdf-file" accept=".pdf" style="display:none">
+            <div class="photo-note" id="portfolio-pdf-note">Replace the current portfolio PDF</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">CV / Resume PDF</div>
+        <div class="pdf-upload-row">
+          <div class="pdf-status" id="cv-pdf-status">
+            <span class="pdf-icon">📁</span>
+            <div>
+              <div class="pdf-name">yahia-zaian-cv.pdf</div>
+              <div class="pdf-meta" id="cv-pdf-meta">Loading…</div>
+            </div>
+          </div>
+          <div class="pdf-actions">
+            <label class="upload-btn" for="cv-pdf-file">Upload New CV PDF</label>
+            <input type="file" id="cv-pdf-file" accept=".pdf" style="display:none">
+            <div class="photo-note" id="cv-pdf-note">Replace the current CV PDF</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="proj-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Add Project</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <img class="proj-img-preview" id="modal-img-preview" src="" alt="" style="display:none">
+      <div class="field" style="margin-bottom:.75rem">
+        <label>Project Image</label>
+        <input type="file" id="modal-img-file" accept="image/*" style="background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem;color:var(--text);width:100%">
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Project Name</label><input type="text" id="modal-name" placeholder="e.g. Polex"></div>
+        <div class="field">
+          <label>Section / Category</label>
+          <select id="modal-category">
+            <option value="branding">Branding</option>
+            <option value="social">Social Media</option>
+            <option value="keyvisual">Key Visual</option>
+            <option value="uiux">UI / UX</option>
+            <option value="packaging">Packaging</option>
+            <option value="motion">Motion Graphics</option>
+            <option value="identity">Brand Identity</option>
+            <option value="editorial">Editorial</option>
+            <option value="other">Other (custom)</option>
+          </select>
+          <div class="cat-custom-wrap" id="cat-custom-wrap">
+            <input type="text" id="modal-cat-custom" placeholder="Type custom category name...">
+          </div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="field"><label>Category Label (shown on card — can include country flag)</label><input type="text" id="modal-cat-label" placeholder="e.g. Branding · Egypt 🇪🇬"></div>
+      </div>
+      <div class="form-row single">
+        <div class="field"><label>Description</label><textarea id="modal-desc" rows="4" placeholder="What you did, for whom, the challenge, the result..."></textarea></div>
+      </div>
+      <div class="form-row single">
+        <div class="field">
+          <label>Gallery Images (shown on project page)</label>
+          <div id="modal-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-bottom:.55rem;"></div>
+          <label class="upload-btn" id="gallery-add-label" for="modal-gallery-file">+ Add Image (0/5)</label>
+          <input type="file" id="modal-gallery-file" accept="image/*" multiple style="display:none">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="field"><label>Project Link (optional)</label><input type="url" id="modal-link" placeholder="https://..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn-primary" id="modal-save">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="server-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fca5a5;font-size:.78rem;font-weight:500;padding:.6rem 1.2rem;text-align:center;letter-spacing:.02em;">
+  ⚠️ Server not running — changes won't save. Open Terminal, go to the website folder and run: <code style="background:rgba(0,0,0,.3);padding:.1rem .4rem;border-radius:3px;margin:0 .3rem;">python3 server.py</code> then refresh this page.
+</div>
+
+<script>
+const API_RELATIVE = '/api';
+const API_ABSOLUTE = 'http://localhost:4001/api';
+let API = API_RELATIVE;
+let content = {};
+let editingId = null;
+let pendingImgFile = null;
+let pendingGalleryFiles = []; // {file, previewUrl}
+let existingGalleryImages = []; // paths already saved
+let heroPhotoFile = null;
+let designLogoFile = null;
+let musicLogoFile = null;
+let musicHeroFile = null;
+let albumCoverFile = null;
+
+const SECTIONS = {
+  hero:         { el:'sec-hero',         title:'Hero & Photo' },
+  cards:        { el:'sec-cards',        title:'Home Cards' },
+  'marquee-home':{ el:'sec-marquee-home',title:'Home Marquee' },
+  'design-hero':{ el:'sec-design-hero',  title:'Design Page — Hero' },
+  projects:     { el:'sec-projects',     title:'Design Projects' },
+  music:        { el:'sec-music',        title:'Music Page' },
+  contact:      { el:'sec-contact',      title:'Contact Info' },
+  availability: { el:'sec-availability', title:'Availability' },
+  documents:    { el:'sec-documents',    title:'Portfolio & CV' },
+};
+
+const CAT_LABELS = {
+  branding:'Branding', social:'Social Media', keyvisual:'Key Visual',
+  uiux:'UI / UX', packaging:'Packaging', motion:'Motion Graphics',
+  identity:'Brand Identity', editorial:'Editorial', other:''
+};
+
+// ── Server check ─────────────────────────────────────────
+async function checkServer() {
+  // Try relative first (when served directly from server.py)
+  for (const base of [API_RELATIVE, API_ABSOLUTE]) {
+    try {
+      const r = await fetch(base + '/content');
+      if (r.ok) {
+        API = base;
+        document.getElementById('server-banner').style.display = 'none';
+        return true;
+      }
+    } catch { /* try next */ }
+  }
+  document.getElementById('server-banner').style.display = 'block';
+  document.getElementById('save-btn').disabled = true;
+  document.getElementById('save-btn').textContent = 'Server offline';
+  return false;
+}
+
+// ── Load ────────────────────────────────────────────────
+async function load() {
+  const ok = await checkServer();
+  if (!ok) return;
+  const r = await fetch(API + '/content');
+  content = await r.json();
+  populate();
+}
+
+function populate() {
+  const h = content.hero;
+  document.getElementById('hero-photo-preview').src = '/' + h.photo;
+  document.getElementById('hero-name-first').value  = h.nameFirst || '';
+  document.getElementById('hero-name-last').value   = h.nameLast  || '';
+  document.getElementById('hero-location').value    = h.location  || '';
+  document.getElementById('hero-year').value        = h.year      || '';
+  document.getElementById('hero-bio').value         = h.bio       || '';
+  renderRoles();
+  renderHomeMarquee();
+
+  const cd = content.cards?.design || {};
+  document.getElementById('card-design-logo').value  = cd.logo  || '';
+  document.getElementById('card-design-title').value = cd.title || '';
+  document.getElementById('card-design-desc').value  = cd.desc  || '';
+  document.getElementById('card-design-sub').value   = cd.sub   || '';
+  const dlp = document.getElementById('card-design-logo-preview');
+  dlp.innerHTML = cd.logoImage
+    ? `<img src="/${cd.logoImage}" alt="Design logo">`
+    : `<span class="logo-preview-empty">No image<br>Text used</span>`;
+
+  const cm = content.cards?.music || {};
+  document.getElementById('card-music-title').value = cm.title || '';
+  document.getElementById('card-music-desc').value  = cm.desc  || '';
+  document.getElementById('card-music-sub').value   = cm.sub   || '';
+  const mlp = document.getElementById('card-music-logo-preview');
+  mlp.innerHTML = cm.logoImage
+    ? `<img src="/${cm.logoImage}" alt="Music logo">`
+    : `<span class="logo-preview-empty">No image<br>Text used</span>`;
+
+  const d = content.design;
+  document.getElementById('design-h1').value      = d.headingLine1 || '';
+  document.getElementById('design-h2').value      = d.headingLine2 || '';
+  document.getElementById('design-eyebrow').value = d.eyebrow      || '';
+  document.getElementById('design-bio').value     = d.bio          || '';
+  document.getElementById('design-marquee').value = d.marquee      || '';
+  document.getElementById('design-avail').value   = d.availabilityText || '';
+  renderDesignStats();
+  renderProjects();
+
+  const m = content.music;
+  document.getElementById('music-eyebrow').value   = m.eyebrow   || '';
+  document.getElementById('music-genres').value    = m.genres    || '';
+  document.getElementById('music-location').value  = m.location  || '';
+  document.getElementById('music-bio').value       = m.bio       || '';
+  document.getElementById('music-marquee').value   = m.marquee   || '';
+  renderMusicPlatforms();
+  // Music hero photo
+  const heroImg = m.heroImage || '';
+  if (heroImg) {
+    const prev = document.getElementById('music-hero-preview');
+    prev.src = '/' + heroImg; prev.style.display = 'block';
+    document.getElementById('music-hero-empty').style.display = 'none';
+  }
+  // Latest album
+  const album = m.latestAlbum || {};
+  document.getElementById('album-name-input').value = album.name || '';
+  document.getElementById('album-year-input').value = album.year || '';
+  if (album.cover) {
+    const prev = document.getElementById('album-cover-preview');
+    prev.src = '/' + album.cover; prev.style.display = 'block';
+    document.getElementById('album-cover-empty').style.display = 'none';
+  }
+  renderAlbumTracks(album.tracks || []);
+  renderAlbumLinks(album.links || []);
+
+  const c = content.contact;
+  document.getElementById('contact-email').value    = c.email    || '';
+  document.getElementById('contact-phone').value    = c.phone    || '';
+  document.getElementById('contact-linkedin').value = c.linkedin || '';
+  document.getElementById('contact-behance').value  = c.behance  || '';
+  document.getElementById('contact-instagram').value= c.instagram|| '';
+  document.getElementById('avail-status').value     = c.availabilityStatus || '';
+  document.getElementById('avail-note').value       = c.availabilityNote   || '';
+}
+
+// ── Roles ────────────────────────────────────────────────
+function renderRoles() {
+  const wrap = document.getElementById('roles-tags');
+  wrap.innerHTML = (content.hero.roles||[]).map((r,i)=>
+    `<div class="tag">${r}<span class="tag-del" data-i="${i}">✕</span></div>`).join('');
+  wrap.querySelectorAll('.tag-del').forEach(el=>
+    el.addEventListener('click',()=>{ content.hero.roles.splice(+el.dataset.i,1); renderRoles(); }));
+}
+document.getElementById('role-add-btn').addEventListener('click',()=>{
+  const inp=document.getElementById('role-input'), v=inp.value.trim();
+  if(!v) return; content.hero.roles.push(v); inp.value=''; renderRoles();
+});
+document.getElementById('role-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('role-add-btn').click(); });
+
+// ── Home Marquee ─────────────────────────────────────────
+function renderHomeMarquee() {
+  const wrap = document.getElementById('home-marquee-tags');
+  wrap.innerHTML = (content.hero.marquee||[]).map((r,i)=>
+    `<div class="tag">${r}<span class="tag-del" data-i="${i}">✕</span></div>`).join('');
+  wrap.querySelectorAll('.tag-del').forEach(el=>
+    el.addEventListener('click',()=>{ content.hero.marquee.splice(+el.dataset.i,1); renderHomeMarquee(); }));
+}
+document.getElementById('home-marquee-add').addEventListener('click',()=>{
+  const inp=document.getElementById('home-marquee-input'), v=inp.value.trim();
+  if(!v) return; if(!content.hero.marquee) content.hero.marquee=[];
+  content.hero.marquee.push(v); inp.value=''; renderHomeMarquee();
+});
+document.getElementById('home-marquee-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('home-marquee-add').click(); });
+
+// ── Design Stats ─────────────────────────────────────────
+function renderDesignStats() {
+  const list = document.getElementById('design-stats-list');
+  list.innerHTML = (content.design.stats||[]).map((s,i)=>`
+    <div class="stat-row">
+      <input type="text" value="${s}" data-i="${i}" class="stat-input">
+      <button class="stat-del" data-i="${i}">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('.stat-del').forEach(btn=>
+    btn.addEventListener('click',()=>{ content.design.stats.splice(+btn.dataset.i,1); renderDesignStats(); }));
+}
+document.getElementById('add-stat-btn').addEventListener('click',()=>{
+  if(!content.design.stats) content.design.stats=[];
+  content.design.stats.push('New Stat'); renderDesignStats();
+});
+
+// ── Music Platforms ──────────────────────────────────────
+function renderMusicPlatforms() {
+  const list = document.getElementById('music-platforms-list');
+  const platforms = content.music.platforms || [];
+  list.innerHTML = platforms.map((p, i) => `
+    <div class="platform-edit-row" data-i="${i}">
+      <input class="platform-icon-inp" type="text" value="${p.icon||''}" placeholder="☁️" data-field="icon">
+      <input type="text" value="${p.name||''}" placeholder="Platform name" data-field="name">
+      <input type="text" value="${p.sub||''}" placeholder="Sub-label" data-field="sub">
+      <input type="url" value="${p.url||''}" placeholder="https://..." data-field="url">
+      <button class="platform-del-btn" data-i="${i}">✕</button>
+    </div>`).join('');
+
+  list.querySelectorAll('.platform-edit-row input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const row = e.target.closest('.platform-edit-row');
+      const i = +row.dataset.i;
+      content.music.platforms[i][e.target.dataset.field] = e.target.value;
+    });
+  });
+  list.querySelectorAll('.platform-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      content.music.platforms.splice(+btn.dataset.i, 1);
+      renderMusicPlatforms();
+    });
+  });
+}
+document.getElementById('add-platform-btn').addEventListener('click', () => {
+  if (!content.music.platforms) content.music.platforms = [];
+  content.music.platforms.push({ id: String(Date.now()), icon: '', name: '', sub: '', url: '' });
+  renderMusicPlatforms();
+  // Focus the icon input of the new row
+  const rows = document.querySelectorAll('.platform-edit-row');
+  if (rows.length) rows[rows.length-1].querySelector('input')?.focus();
+});
+
+// ── Album Tracks & Links ─────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function renderAlbumTracks(tracks) {
+  const el = document.getElementById('album-tracks-admin');
+  el.innerHTML = tracks.map((t, i) => `
+    <div class="platform-row" data-track-idx="${i}" style="align-items:center">
+      <input type="text" placeholder="Track title" value="${escHtml(t.title||'')}" style="flex:2;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:.5rem .7rem;font-size:.82rem;border-radius:2px;" class="track-title-input">
+      <input type="text" placeholder="0:00" value="${escHtml(t.duration||'')}" style="flex:0 0 70px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:.5rem .7rem;font-size:.82rem;border-radius:2px;" class="track-dur-input">
+      <button class="platform-del" onclick="removeTrack(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function renderAlbumLinks(links) {
+  const el = document.getElementById('album-links-admin');
+  el.innerHTML = links.map((l, i) => `
+    <div class="platform-row" data-link-idx="${i}">
+      <input type="text" placeholder="Icon (emoji)" value="${escHtml(l.icon||'')}" style="flex:0 0 60px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:.5rem .7rem;font-size:.82rem;border-radius:2px;text-align:center;" class="link-icon-input">
+      <input type="text" placeholder="Platform name" value="${escHtml(l.platform||'')}" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:.5rem .7rem;font-size:.82rem;border-radius:2px;" class="link-platform-input">
+      <input type="url" placeholder="https://..." value="${escHtml(l.url||'')}" style="flex:2;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:.5rem .7rem;font-size:.82rem;border-radius:2px;" class="link-url-input">
+      <button class="platform-del" onclick="removeAlbumLink(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function removeTrack(idx) {
+  const tracks = getAlbumTracksFromDom();
+  tracks.splice(idx, 1);
+  renderAlbumTracks(tracks);
+}
+function removeAlbumLink(idx) {
+  const links = getAlbumLinksFromDom();
+  links.splice(idx, 1);
+  renderAlbumLinks(links);
+}
+
+function getAlbumTracksFromDom() {
+  return Array.from(document.querySelectorAll('#album-tracks-admin .platform-row')).map(row => ({
+    title: row.querySelector('.track-title-input')?.value || '',
+    duration: row.querySelector('.track-dur-input')?.value || ''
+  }));
+}
+function getAlbumLinksFromDom() {
+  return Array.from(document.querySelectorAll('#album-links-admin .platform-row')).map(row => ({
+    icon: row.querySelector('.link-icon-input')?.value || '',
+    platform: row.querySelector('.link-platform-input')?.value || '',
+    url: row.querySelector('.link-url-input')?.value || ''
+  }));
+}
+
+// ── Hero photo ───────────────────────────────────────────
+document.getElementById('hero-photo-file').addEventListener('change',e=>{
+  heroPhotoFile=e.target.files[0];
+  if(heroPhotoFile) document.getElementById('hero-photo-preview').src=URL.createObjectURL(heroPhotoFile);
+});
+
+// ── Card logo uploads ────────────────────────────────────
+document.getElementById('card-design-logo-file').addEventListener('change',e=>{
+  designLogoFile=e.target.files[0];
+  if(designLogoFile)
+    document.getElementById('card-design-logo-preview').innerHTML=`<img src="${URL.createObjectURL(designLogoFile)}" alt="">`;
+});
+document.getElementById('card-music-logo-file').addEventListener('change',e=>{
+  musicLogoFile=e.target.files[0];
+  if(musicLogoFile)
+    document.getElementById('card-music-logo-preview').innerHTML=`<img src="${URL.createObjectURL(musicLogoFile)}" alt="">`;
+});
+document.getElementById('card-design-logo-clear').addEventListener('click',()=>{
+  designLogoFile=null;
+  if(content.cards?.design) content.cards.design.logoImage='';
+  document.getElementById('card-design-logo-file').value='';
+  document.getElementById('card-design-logo-preview').innerHTML=`<span class="logo-preview-empty">No image<br>Text used</span>`;
+});
+document.getElementById('card-music-logo-clear').addEventListener('click',()=>{
+  musicLogoFile=null;
+  if(content.cards?.music) content.cards.music.logoImage='';
+  document.getElementById('card-music-logo-file').value='';
+  document.getElementById('card-music-logo-preview').innerHTML=`<span class="logo-preview-empty">No image<br>Text used</span>`;
+});
+
+// Music hero photo
+document.getElementById('music-hero-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  musicHeroFile = f;
+  const prev = document.getElementById('music-hero-preview');
+  prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+  document.getElementById('music-hero-empty').style.display = 'none';
+});
+document.getElementById('music-hero-clear').addEventListener('click', () => {
+  musicHeroFile = null;
+  document.getElementById('music-hero-preview').style.display = 'none';
+  document.getElementById('music-hero-empty').style.display = 'flex';
+  if (content.music) content.music.heroImage = '';
+});
+
+// Album cover
+document.getElementById('album-cover-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  albumCoverFile = f;
+  const prev = document.getElementById('album-cover-preview');
+  prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+  document.getElementById('album-cover-empty').style.display = 'none';
+});
+document.getElementById('album-cover-clear').addEventListener('click', () => {
+  albumCoverFile = null;
+  document.getElementById('album-cover-preview').style.display = 'none';
+  document.getElementById('album-cover-empty').style.display = 'flex';
+  if (content.music?.latestAlbum) content.music.latestAlbum.cover = '';
+});
+
+// Add track
+document.getElementById('add-track-btn').addEventListener('click', () => {
+  const tracks = getAlbumTracksFromDom();
+  tracks.push({ title: '', duration: '' });
+  renderAlbumTracks(tracks);
+});
+
+// Add album link
+document.getElementById('add-album-link-btn').addEventListener('click', () => {
+  const links = getAlbumLinksFromDom();
+  links.push({ icon: '🎵', platform: '', url: '' });
+  renderAlbumLinks(links);
+});
+
+// ── Projects ─────────────────────────────────────────────
+function renderProjects() {
+  const grid=document.getElementById('projects-grid');
+  grid.innerHTML=(content.design.projects||[]).map(p=>`
+    <div class="proj-card" data-id="${p.id}">
+      <img class="proj-card-img" src="/${p.image}" alt="${p.name}" onerror="this.style.opacity='.3'">
+      <div class="proj-card-body">
+        <div class="proj-card-cat">${p.categoryLabel}</div>
+        <div class="proj-card-name">${p.name}</div>
+        ${p.description?`<div class="proj-card-desc">${p.description}</div>`:''}
+      </div>
+      <div class="proj-card-del" data-id="${p.id}">✕</div>
+    </div>`).join('')+`
+    <button class="add-proj-btn" id="add-proj-btn"><span class="add-proj-icon">+</span><span>Add Project</span></button>`;
+
+  grid.querySelectorAll('.proj-card').forEach(c=>{
+    c.addEventListener('click',e=>{ if(e.target.classList.contains('proj-card-del')) return; openModal(c.dataset.id); });
+  });
+  grid.querySelectorAll('.proj-card-del').forEach(b=>{
+    b.addEventListener('click',e=>{ e.stopPropagation();
+      if(!confirm('Delete this project?')) return;
+      content.design.projects=content.design.projects.filter(p=>p.id!==b.dataset.id);
+      renderProjects();
+    });
+  });
+  document.getElementById('add-proj-btn').addEventListener('click',()=>openModal(null));
+}
+
+// ── Modal ────────────────────────────────────────────────
+function openModal(id) {
+  editingId=id; pendingImgFile=null; pendingGalleryFiles=[]; existingGalleryImages=[];
+  document.getElementById('proj-modal').classList.add('open');
+  if(id) {
+    const p=content.design.projects.find(x=>x.id===id);
+    document.getElementById('modal-title').textContent='Edit Project';
+    document.getElementById('modal-name').value       = p.name;
+    document.getElementById('modal-category').value   = p.category;
+    document.getElementById('modal-cat-label').value  = p.categoryLabel;
+    document.getElementById('modal-desc').value       = p.description||'';
+    document.getElementById('modal-link').value       = p.link||'';
+    const prev=document.getElementById('modal-img-preview');
+    prev.src='/'+p.image; prev.style.display='block';
+    handleCatCustom(p.category);
+    if(p.category==='other') document.getElementById('modal-cat-custom').value=p.categoryLabel;
+    existingGalleryImages = [...(p.images||[])];
+    renderGalleryThumbs();
+  } else {
+    document.getElementById('modal-title').textContent='Add Project';
+    ['modal-name','modal-cat-label','modal-desc','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('modal-category').value='branding';
+    document.getElementById('modal-img-preview').style.display='none';
+    document.getElementById('modal-img-file').value='';
+    handleCatCustom('branding');
+    existingGalleryImages = []; pendingGalleryFiles = [];
+    renderGalleryThumbs();
+  }
+}
+function closeModal() { document.getElementById('proj-modal').classList.remove('open'); }
+
+function renderGalleryThumbs() {
+  const MAX = 5;
+  const grid = document.getElementById('modal-gallery-grid');
+  const allItems = [
+    ...existingGalleryImages.map(path => ({ type:'existing', path })),
+    ...pendingGalleryFiles.map(f => ({ type:'pending', url: f.previewUrl, file: f.file }))
+  ];
+  const count = allItems.length;
+  const label = document.getElementById('gallery-add-label');
+  if (label) {
+    label.textContent = count >= MAX ? `Max ${MAX} images reached` : `+ Add Image (${count}/${MAX})`;
+    label.style.opacity = count >= MAX ? '.4' : '1';
+    label.style.pointerEvents = count >= MAX ? 'none' : '';
+  }
+  grid.innerHTML = allItems.map((item, i) => `
+    <div class="gallery-thumb" data-i="${i}" data-type="${item.type}">
+      <img src="${item.type === 'existing' ? '/' + item.path : item.url}" alt="">
+      <div class="gallery-thumb-del" data-i="${i}" data-type="${item.type}">✕</div>
+    </div>`).join('');
+  grid.querySelectorAll('.gallery-thumb-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.i;
+      const type = btn.dataset.type;
+      if (type === 'existing') {
+        existingGalleryImages.splice(i - 0, 1);
+      } else {
+        pendingGalleryFiles.splice(i - existingGalleryImages.length, 1);
+      }
+      renderGalleryThumbs();
+    });
+  });
+}
+document.getElementById('modal-close').addEventListener('click',closeModal);
+document.getElementById('modal-cancel').addEventListener('click',closeModal);
+document.getElementById('proj-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('proj-modal')) closeModal(); });
+
+function handleCatCustom(val) {
+  document.getElementById('cat-custom-wrap').classList.toggle('show', val==='other');
+}
+document.getElementById('modal-category').addEventListener('change',e=>{
+  const val=e.target.value;
+  handleCatCustom(val);
+  const catLabel=document.getElementById('modal-cat-label');
+  if(val!=='other' && (!catLabel.value||Object.values(CAT_LABELS).includes(catLabel.value))) {
+    catLabel.value=CAT_LABELS[val]||'';
+  }
+});
+
+document.getElementById('modal-img-file').addEventListener('change',e=>{
+  pendingImgFile=e.target.files[0];
+  if(pendingImgFile) {
+    const prev=document.getElementById('modal-img-preview');
+    prev.src=URL.createObjectURL(pendingImgFile); prev.style.display='block';
+  }
+});
+
+document.getElementById('modal-gallery-file').addEventListener('change', e => {
+  const MAX = 5;
+  Array.from(e.target.files).forEach(file => {
+    const total = existingGalleryImages.length + pendingGalleryFiles.length;
+    if (total >= MAX) { showToast(`Max ${MAX} gallery images per project`, true); return; }
+    pendingGalleryFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+  });
+  e.target.value = '';
+  renderGalleryThumbs();
+});
+
+document.getElementById('modal-save').addEventListener('click',async()=>{
+  const name=document.getElementById('modal-name').value.trim();
+  if(!name) { showToast('Project name is required',true); return; }
+  let imgPath=editingId ? content.design.projects.find(p=>p.id===editingId)?.image||'' : '';
+  if(pendingImgFile) {
+    const fd=new FormData(); fd.append('image',pendingImgFile);
+    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const j=await r.json(); imgPath=j.path;
+  }
+  if(!imgPath) { showToast('Please upload an image',true); return; }
+
+  // Upload gallery images
+  const newGalleryPaths = [];
+  for (const gf of pendingGalleryFiles) {
+    const fd = new FormData(); fd.append('image', gf.file);
+    const r = await fetch(API+'/upload',{method:'POST',body:fd});
+    const j = await r.json(); newGalleryPaths.push(j.path);
+  }
+  const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
+
+  const cat=document.getElementById('modal-category').value;
+  let catLabel=document.getElementById('modal-cat-label').value.trim();
+  if(cat==='other') catLabel=document.getElementById('modal-cat-custom').value.trim()||catLabel;
+  if(!catLabel) catLabel=CAT_LABELS[cat]||cat;
+
+  const proj={
+    id:          editingId||String(Date.now()),
+    name,
+    category:    cat,
+    categoryLabel: catLabel,
+    description: document.getElementById('modal-desc').value.trim(),
+    image:       imgPath,
+    link:        document.getElementById('modal-link').value.trim(),
+    images:      allGalleryPaths
+  };
+  if(editingId) {
+    const idx=content.design.projects.findIndex(p=>p.id===editingId);
+    content.design.projects[idx]=proj;
+  } else {
+    content.design.projects.push(proj);
+  }
+  closeModal(); renderProjects();
+  showToast('Project saved — click Save Changes to publish');
+});
+
+// ── PDF uploads ──────────────────────────────────────────
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/1024/1024).toFixed(2) + ' MB';
+}
+
+async function uploadPdf(file, type) {
+  const noteEl = document.getElementById(type + '-pdf-note');
+  const metaEl = document.getElementById(type + '-pdf-meta');
+  noteEl.textContent = 'Uploading…';
+  const fd = new FormData();
+  fd.append('pdf', file);
+  fd.append('type', type); // 'portfolio' or 'cv'
+  try {
+    const r = await fetch(API + '/upload-pdf', { method: 'POST', body: fd });
+    const j = await r.json();
+    if (j.ok) {
+      metaEl.textContent = formatBytes(file.size) + ' · just uploaded';
+      noteEl.textContent = 'Upload successful';
+      showToast(type === 'portfolio' ? 'Portfolio PDF updated' : 'CV PDF updated');
+    } else {
+      noteEl.textContent = 'Upload failed — server error';
+      showToast('Upload failed', true);
+    }
+  } catch {
+    noteEl.textContent = 'Upload failed — is the server running?';
+    showToast('Upload failed', true);
+  }
+}
+
+(async function loadPdfMeta() {
+  for (const type of ['portfolio', 'cv']) {
+    const filename = type === 'portfolio' ? 'yahia-zaian-portfolio.pdf' : 'yahia-zaian-cv.pdf';
+    try {
+      const r = await fetch('/' + 'assets/' + filename, { method: 'HEAD' });
+      const size = r.headers.get('Content-Length');
+      const metaEl = document.getElementById(type + '-pdf-meta');
+      metaEl.textContent = size ? formatBytes(+size) + ' · on server' : 'File exists on server';
+    } catch {
+      document.getElementById(type + '-pdf-meta').textContent = 'Not found on server';
+    }
+  }
+})();
+
+document.getElementById('portfolio-pdf-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  uploadPdf(file, 'portfolio');
+});
+document.getElementById('cv-pdf-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  uploadPdf(file, 'cv');
+});
+
+// ── Sidebar nav ──────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const key=item.dataset.section;
+    if(!SECTIONS[key]) return;
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById(SECTIONS[key].el).classList.add('active');
+    document.getElementById('topbar-title').textContent=SECTIONS[key].title;
+  });
+});
+
+// ── Save ─────────────────────────────────────────────────
+document.getElementById('save-btn').addEventListener('click',async()=>{
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  // Hero photo upload
+  if(heroPhotoFile) {
+    const fd=new FormData(); fd.append('image',heroPhotoFile);
+    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const j=await r.json(); content.hero.photo=j.path; heroPhotoFile=null;
+  }
+
+  // Card logo uploads
+  let designLogoPath = content.cards?.design?.logoImage || '';
+  let musicLogoPath  = content.cards?.music?.logoImage  || '';
+  if(designLogoFile) {
+    const fd=new FormData(); fd.append('image',designLogoFile);
+    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const j=await r.json(); designLogoPath=j.path; designLogoFile=null;
+  }
+  if(musicLogoFile) {
+    const fd=new FormData(); fd.append('image',musicLogoFile);
+    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const j=await r.json(); musicLogoPath=j.path; musicLogoFile=null;
+  }
+
+  // Music hero photo upload
+  if (musicHeroFile) {
+    const fd = new FormData(); fd.append('image', musicHeroFile);
+    const r = await fetch(`${API}/upload`, { method:'POST', body:fd });
+    const j = await r.json();
+    content.music.heroImage = j.path;
+    musicHeroFile = null;
+  }
+  // Album cover upload
+  if (albumCoverFile) {
+    const fd = new FormData(); fd.append('image', albumCoverFile);
+    const r = await fetch(`${API}/upload`, { method:'POST', body:fd });
+    const j = await r.json();
+    if (!content.music.latestAlbum) content.music.latestAlbum = {};
+    content.music.latestAlbum.cover = j.path;
+    albumCoverFile = null;
+  }
+
+  // Collect all form values
+  content.hero.nameFirst = document.getElementById('hero-name-first').value.trim();
+  content.hero.nameLast  = document.getElementById('hero-name-last').value.trim();
+  content.hero.name      = (content.hero.nameFirst+' '+content.hero.nameLast).toUpperCase().trim();
+  content.hero.location  = document.getElementById('hero-location').value.trim();
+  content.hero.year      = document.getElementById('hero-year').value.trim();
+  content.hero.bio       = document.getElementById('hero-bio').value.trim();
+
+  if(!content.cards) content.cards={};
+  content.cards.design = {
+    logoImage: designLogoPath,
+    logo:  document.getElementById('card-design-logo').value.trim(),
+    title: document.getElementById('card-design-title').value.trim(),
+    desc:  document.getElementById('card-design-desc').value.trim(),
+    sub:   document.getElementById('card-design-sub').value.trim(),
+  };
+  content.cards.music = {
+    logoImage: musicLogoPath,
+    title: document.getElementById('card-music-title').value.trim(),
+    desc:  document.getElementById('card-music-desc').value.trim(),
+    sub:   document.getElementById('card-music-sub').value.trim(),
+  };
+
+  // Sync stats from inputs
+  content.design.stats = Array.from(document.querySelectorAll('.stat-input')).map(i=>i.value.trim()).filter(Boolean);
+  content.design.headingLine1    = document.getElementById('design-h1').value.trim();
+  content.design.headingLine2    = document.getElementById('design-h2').value.trim();
+  content.design.eyebrow         = document.getElementById('design-eyebrow').value.trim();
+  content.design.bio             = document.getElementById('design-bio').value.trim();
+  content.design.marquee         = document.getElementById('design-marquee').value.trim();
+  content.design.availabilityText= document.getElementById('design-avail').value.trim();
+
+  content.music.eyebrow    = document.getElementById('music-eyebrow').value.trim();
+  content.music.genres     = document.getElementById('music-genres').value.trim();
+  content.music.location   = document.getElementById('music-location').value.trim();
+  content.music.bio        = document.getElementById('music-bio').value.trim();
+  content.music.marquee    = document.getElementById('music-marquee').value.trim();
+  // platforms are kept live in content.music.platforms via the input listeners
+  content.music.latestAlbum = {
+    name: document.getElementById('album-name-input').value.trim(),
+    year: document.getElementById('album-year-input').value.trim(),
+    cover: content.music.latestAlbum?.cover || '',
+    tracks: getAlbumTracksFromDom(),
+    links: getAlbumLinksFromDom()
+  };
+
+  content.contact.email             = document.getElementById('contact-email').value.trim();
+  content.contact.phone             = document.getElementById('contact-phone').value.trim();
+  content.contact.linkedin          = document.getElementById('contact-linkedin').value.trim();
+  content.contact.behance           = document.getElementById('contact-behance').value.trim();
+  content.contact.instagram         = document.getElementById('contact-instagram').value.trim();
+  content.contact.availabilityStatus= document.getElementById('avail-status').value.trim();
+  content.contact.availabilityNote  = document.getElementById('avail-note').value.trim();
+
+  try {
+    await fetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
+    showToast('✓ Changes saved!');
+  } catch(e) { showToast('Error saving',true); }
+
+  btn.disabled=false; btn.textContent='Save Changes';
+});
+
+// ── Toast ────────────────────────────────────────────────
+function showToast(msg,isError=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(isError?' error':'');
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+load();
+</script>
+</body>
+</html>

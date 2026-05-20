@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+import os, json, uuid, mimetypes
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlparse
+import email.parser
+
+PORT = int(os.environ.get('PORT', 4001))
+BASE = os.path.dirname(os.path.abspath(__file__))
+CONTENT_FILE = os.path.join(BASE, 'content.json')
+UPLOAD_DIR   = os.path.join(BASE, 'assets', 'portfolio')
+
+def parse_multipart(rfile, content_type, content_length):
+    boundary = None
+    for part in content_type.split(';'):
+        part = part.strip()
+        if part.startswith('boundary='):
+            boundary = part[9:].strip('"')
+    if not boundary:
+        return None, None
+    raw = rfile.read(content_length)
+    boundary_bytes = ('--' + boundary).encode()
+    parts = raw.split(boundary_bytes)
+    for p in parts:
+        if b'filename=' not in p:
+            continue
+        header_end = p.find(b'\r\n\r\n')
+        if header_end == -1:
+            continue
+        headers_raw = p[:header_end].decode('utf-8', errors='replace')
+        body = p[header_end+4:]
+        if body.endswith(b'\r\n'):
+            body = body[:-2]
+        filename = None
+        for h in headers_raw.split('\r\n'):
+            if 'filename=' in h:
+                fname_part = [x for x in h.split(';') if 'filename=' in x]
+                if fname_part:
+                    filename = fname_part[0].split('=')[1].strip().strip('"')
+        return filename, body
+    return None, None
+
+class Handler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=BASE, **kwargs)
+
+    def log_message(self, fmt, *args):
+        pass  # quiet
+
+    def send_json(self, data, status=200):
+        body = json.dumps(data, ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', len(body))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        if parsed.path == '/api/content':
+            with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.send_json(data)
+        else:
+            super().do_GET()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        ct = self.headers.get('Content-Type', '')
+        cl = int(self.headers.get('Content-Length', 0))
+
+        if parsed.path == '/api/content':
+            body = self.rfile.read(cl)
+            data = json.loads(body.decode('utf-8'))
+            with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            self.send_json({'ok': True})
+
+        elif parsed.path == '/api/upload':
+            filename, file_bytes = parse_multipart(self.rfile, ct, cl)
+            if not filename or file_bytes is None:
+                self.send_json({'error': 'no file'}, 400)
+                return
+            ext = os.path.splitext(filename)[1] or '.png'
+            safe_name = str(uuid.uuid4())[:8] + ext
+            dest = os.path.join(UPLOAD_DIR, safe_name)
+            with open(dest, 'wb') as f:
+                f.write(file_bytes)
+            self.send_json({'path': 'assets/portfolio/' + safe_name})
+
+        elif parsed.path == '/api/upload-pdf':
+            raw = self.rfile.read(cl)
+            # parse multipart to get 'pdf' file and 'type' field
+            boundary = None
+            for part in ct.split(';'):
+                part = part.strip()
+                if part.startswith('boundary='):
+                    boundary = part[9:].strip('"')
+            if not boundary:
+                self.send_json({'error': 'bad request'}, 400); return
+            boundary_bytes = ('--' + boundary).encode()
+            parts = raw.split(boundary_bytes)
+            pdf_bytes = None
+            pdf_type = None
+            for p in parts:
+                if len(p) < 4: continue
+                header_end = p.find(b'\r\n\r\n')
+                if header_end == -1: continue
+                headers_raw = p[:header_end].decode('utf-8', errors='replace')
+                body = p[header_end+4:]
+                if body.endswith(b'\r\n'): body = body[:-2]
+                if 'filename=' in headers_raw:
+                    pdf_bytes = body
+                elif 'name="type"' in headers_raw:
+                    pdf_type = body.decode('utf-8', errors='replace').strip()
+            if pdf_bytes is None or pdf_type not in ('portfolio', 'cv'):
+                self.send_json({'error': 'invalid'}, 400); return
+            names = {'portfolio': 'yahia-zaian-portfolio.pdf', 'cv': 'yahia-zaian-cv.pdf'}
+            dest = os.path.join(BASE, 'assets', names[pdf_type])
+            with open(dest, 'wb') as f:
+                f.write(pdf_bytes)
+            self.send_json({'ok': True})
+
+        else:
+            self.send_json({'error': 'not found'}, 404)
+
+if __name__ == '__main__':
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    print(f'  Dashboard: http://localhost:{PORT}/admin/')
+    print(f'  Website:   http://localhost:{PORT}/')
+    HTTPServer(('', PORT), Handler).serve_forever()

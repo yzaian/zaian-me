@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: zaian-me
+    runtime: python
+    buildCommand: echo "no build needed"
+    startCommand: python3 server.py
+    envVars:
+      - key: PORT
+        generateValue: false
