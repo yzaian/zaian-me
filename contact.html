@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,700;0,900;1,900&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -309,11 +310,11 @@
 
   /* ── Load contact data ── */
   const CARDS_DEF = [
-    { label: 'Email',     icon: '✉️', field: 'email',     prefix: 'mailto:',                  isExternal: false },
-    { label: 'Phone',     icon: '📞', field: 'phone',     prefix: 'tel:',                      isExternal: false },
-    { label: 'LinkedIn',  icon: '💼', field: 'linkedin',  prefix: '',                          isExternal: true  },
-    { label: 'Behance',   icon: '🎨', field: 'behance',   prefix: '',                          isExternal: true  },
-    { label: 'Instagram', icon: '📸', field: 'instagram', prefix: '',                          isExternal: true  },
+    { label: 'Email',     icon: '<i class="fa-solid fa-envelope"></i>',     field: 'email',     prefix: 'mailto:', isExternal: false },
+    { label: 'Phone',     icon: '<i class="fa-solid fa-phone"></i>',         field: 'phone',     prefix: 'tel:',    isExternal: false },
+    { label: 'LinkedIn',  icon: '<i class="fa-brands fa-linkedin"></i>',     field: 'linkedin',  prefix: '',        isExternal: true  },
+    { label: 'Behance',   icon: '<i class="fa-brands fa-behance"></i>',      field: 'behance',   prefix: '',        isExternal: true  },
+    { label: 'Instagram', icon: '<i class="fa-brands fa-instagram"></i>',    field: 'instagram', prefix: '',        isExternal: true  },
   ];
   fetch('/api/content')
     .then(r => { if (!r.ok) throw new Error(); return r.json(); })

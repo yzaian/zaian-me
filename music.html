@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,700;0,900;1,900&family=Cormorant+Garamond:ital,wght@1,300;1,400;1,600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -280,7 +281,7 @@
     .platform:hover { color: var(--black); }
     .platform > * { position: relative; z-index: 1; }
     .platform-l { display: flex; align-items: center; gap: 1.8rem; }
-    .platform-icon { font-size: 1.6rem; line-height: 1; }
+    .platform-icon { font-size: 1.3rem; line-height: 1; width: 1.6rem; text-align: center; }
     .platform-name {
       font-family: 'Archivo', sans-serif;
       font-weight: 900; font-size: 1.1rem;
@@ -470,13 +471,35 @@
     .from('#bio',{ y: 20, opacity: 0, duration: .8, ease: 'power2.out' }, '-=.4')
     .from(['#s1','#s2'], { y: 15, opacity: 0, duration: .6, ease: 'power2.out', stagger: .08 }, '-=.5');
 
+  /* ── Brand icon mapper ── */
+  const BRAND_ICONS = {
+    spotify:     'fa-brands fa-spotify',
+    soundcloud:  'fa-brands fa-soundcloud',
+    youtube:     'fa-brands fa-youtube',
+    instagram:   'fa-brands fa-instagram',
+    apple:       'fa-brands fa-apple',
+    tiktok:      'fa-brands fa-tiktok',
+    twitter:     'fa-brands fa-x-twitter',
+    x:           'fa-brands fa-x-twitter',
+    facebook:    'fa-brands fa-facebook',
+    linkedin:    'fa-brands fa-linkedin',
+    behance:     'fa-brands fa-behance',
+  };
+  function brandIcon(name) {
+    const key = (name || '').toLowerCase();
+    for (const [k, cls] of Object.entries(BRAND_ICONS)) {
+      if (key.includes(k)) return `<i class="${cls}"></i>`;
+    }
+    return `<i class="fa-solid fa-music"></i>`;
+  }
+
   /* ── Platforms (dynamic) ── */
   function renderPlatforms(platforms) {
     const list = document.getElementById('platforms-list');
     list.innerHTML = platforms.map(p => `
       <a class="platform js-up" href="${p.url}" target="_blank">
         <div class="platform-l">
-          <span class="platform-icon">${p.icon}</span>
+          <span class="platform-icon">${brandIcon(p.name)}</span>
           <div>
             <div class="platform-name">${p.name}</div>
             <div class="platform-sub">${p.sub}</div>
@@ -550,7 +573,7 @@
           </div>`).join('');
         const linksEl = document.getElementById('album-links');
         linksEl.innerHTML = (album.links || []).map(l => `
-          <a class="album-link" href="${l.url}" target="_blank">${l.icon || '↗'} ${l.platform}</a>`).join('');
+          <a class="album-link" href="${l.url}" target="_blank">${brandIcon(l.platform)} ${l.platform}</a>`).join('');
       }
     })
     .catch(() => renderPlatforms([]));
