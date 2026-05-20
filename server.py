@@ -164,14 +164,6 @@ class Handler(SimpleHTTPRequestHandler):
             with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.send_json(data)
-        elif parsed.path.startswith('/admin'):
-            if parsed.path == '/admin/login.html':
-                super().do_GET()
-                return
-            if not check_auth(self):
-                require_auth(self)
-                return
-            super().do_GET()
         else:
             super().do_GET()
 
