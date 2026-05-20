@@ -58,7 +58,7 @@ h1{font-size:1.2rem;font-weight:600;margin-bottom:.3rem;}
   </form>
 </div>
 <script>
-if (localStorage.getItem('admin_token')) window.location.href = '/admin/';
+// Don't auto-redirect — token may be stale after server restart
 
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
