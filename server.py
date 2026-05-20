@@ -194,8 +194,28 @@ class Handler(SimpleHTTPRequestHandler):
         else:
             self.send_json({'error': 'not found'}, 404)
 
+def fetch_latest_content():
+    """On startup, pull latest content.json from GitHub so redeploys don't lose dashboard edits."""
+    if not GITHUB_TOKEN:
+        return
+    try:
+        api_url = f'https://api.github.com/repos/{GITHUB_REPO}/contents/content.json'
+        req = urllib.request.Request(api_url, headers={
+            'Authorization': f'token {GITHUB_TOKEN}',
+            'Accept': 'application/vnd.github.v3+json'
+        })
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read())
+            content = base64.b64decode(data['content']).decode('utf-8')
+            with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
+                f.write(content)
+        print('  Content synced from GitHub.')
+    except Exception as e:
+        print(f'  Could not sync content from GitHub: {e}')
+
 if __name__ == '__main__':
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+    fetch_latest_content()
     print(f'  Dashboard: http://localhost:{PORT}/admin/')
     print(f'  Website:   http://localhost:{PORT}/')
     HTTPServer(('', PORT), Handler).serve_forever()

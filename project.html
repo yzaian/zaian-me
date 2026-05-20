@@ -217,7 +217,7 @@ function renderProject(p, allProjects) {
 function navigate(e,url){e.preventDefault();lenis.stop();gsap.to('#curtain',{scaleY:1,transformOrigin:'bottom',duration:.65,ease:'power3.inOut',onComplete:()=>window.location.href=url});}
 function navigateTo(e,url){e.preventDefault();lenis.stop();gsap.to('#curtain',{scaleY:1,transformOrigin:'bottom',duration:.65,ease:'power3.inOut',onComplete:()=>window.location.href=url});}
 window.navigate=navigate;
-window.addEventListener('pageshow',function(e){if(e.persisted){gsap.set('#curtain',{scaleY:1,transformOrigin:'top'});gsap.to('#curtain',{scaleY:0,duration:.9,ease:'power3.inOut',delay:.05});}});
+window.addEventListener('pageshow',function(e){if(e.persisted){gsap.set('#curtain',{scaleY:1,transformOrigin:'top'});gsap.to('#curtain',{scaleY:0,transformOrigin:'top',duration:.85,ease:'power3.inOut',delay:.05});}});
 </script>
 </body>
 </html>
