@@ -377,7 +377,7 @@
     });
   }
   window.navigate = navigate;
-  function navigateBack(e) { e.preventDefault(); lenis.stop(); gsap.to('#curtain', { scaleY: 1, transformOrigin: 'bottom', duration: .65, ease: 'power3.inOut', onComplete: () => history.back() }); }
+  function navigateBack(e) { e.preventDefault(); lenis.stop(); gsap.to('#curtain', { scaleY: 1, transformOrigin: 'bottom', duration: .65, ease: 'power3.inOut', onComplete: () => { if (document.referrer && document.referrer.includes(location.hostname)) { history.back(); } else { window.location.href = 'index.html'; } } }); }
   window.navigateBack = navigateBack;
   window.addEventListener('pageshow', function(e) { if (e.persisted) { gsap.set('#curtain', { scaleY: 1, transformOrigin: 'top' }); gsap.to('#curtain', { scaleY: 0, transformOrigin: 'top', duration: .85, ease: 'power3.inOut', delay: .05 }); } });
 </script>

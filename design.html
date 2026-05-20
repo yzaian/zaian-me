@@ -278,6 +278,7 @@
       transition: background .3s, color .3s, border-color .3s;
     }
     .dl-btn:hover { background: var(--white); color: var(--black); border-color: var(--white); }
+    .dl-updated { font-size: .62rem; color: var(--muted); margin-top: .5rem; letter-spacing: .04em; }
 
     /* ─── CONTACT ────────────────────────────── */
     .contact-section {
@@ -443,6 +444,7 @@
       <div class="dl-title">Portfolio<br>PDF</div>
     </div>
     <a class="dl-btn" href="assets/yahia-zaian-portfolio.pdf" download>↓ &nbsp;Download PDF</a>
+    <div class="dl-updated" id="portfolio-updated"></div>
   </div>
   <div class="dl-item js-up">
     <div>
@@ -450,6 +452,7 @@
       <div class="dl-title">CV /<br>Resume</div>
     </div>
     <a class="dl-btn" href="assets/yahia-zaian-cv.pdf" download>↓ &nbsp;Download PDF</a>
+    <div class="dl-updated" id="cv-updated"></div>
   </div>
 </div>
 
@@ -572,6 +575,11 @@
     // Availability note
     if (d.availabilityText) document.querySelector('.contact-note').textContent = d.availabilityText;
 
+    // Last updated dates for downloads
+    const docs = data.documents || {};
+    if (docs.portfolioUpdatedAt) document.getElementById('portfolio-updated').textContent = 'Updated ' + docs.portfolioUpdatedAt;
+    if (docs.cvUpdatedAt) document.getElementById('cv-updated').textContent = 'Updated ' + docs.cvUpdatedAt;
+
     // Logo
     const logoPath = data.cards?.design?.logoImage;
     if (logoPath) {
@@ -615,7 +623,7 @@
     });
   }
   window.navigate = navigate;
-  function navigateBack(e) { e.preventDefault(); lenis.stop(); gsap.to('#curtain', { scaleY: 1, transformOrigin: 'bottom', duration: .65, ease: 'power3.inOut', onComplete: () => history.back() }); }
+  function navigateBack(e) { e.preventDefault(); lenis.stop(); gsap.to('#curtain', { scaleY: 1, transformOrigin: 'bottom', duration: .65, ease: 'power3.inOut', onComplete: () => { if (document.referrer && document.referrer.includes(location.hostname)) { history.back(); } else { window.location.href = 'index.html'; } } }); }
   window.navigateBack = navigateBack;
   window.addEventListener('pageshow', function(e) { if (e.persisted) { gsap.set('#curtain', { scaleY: 1, transformOrigin: 'top' }); gsap.to('#curtain', { scaleY: 0, transformOrigin: 'top', duration: .85, ease: 'power3.inOut', delay: .05 }); } });
 

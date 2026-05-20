@@ -465,6 +465,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
             <div class="photo-note" id="portfolio-pdf-note">Replace the current portfolio PDF</div>
           </div>
         </div>
+        <div class="form-row single" style="margin-top:.75rem">
+          <div class="field"><label>Last Updated Label (shown on site)</label><input type="text" id="portfolio-updated-at" placeholder="e.g. May 2026"></div>
+        </div>
       </div>
       <div class="card-section">
         <div class="card-section-title">CV / Resume PDF</div>
@@ -481,6 +484,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
             <input type="file" id="cv-pdf-file" accept=".pdf" style="display:none">
             <div class="photo-note" id="cv-pdf-note">Replace the current CV PDF</div>
           </div>
+        </div>
+        <div class="form-row single" style="margin-top:.75rem">
+          <div class="field"><label>Last Updated Label (shown on site)</label><input type="text" id="cv-updated-at" placeholder="e.g. May 2026"></div>
         </div>
       </div>
     </section>
@@ -704,6 +710,10 @@ function populate() {
   document.getElementById('avail-status').value     = c.availabilityStatus || '';
   document.getElementById('avail-note').value       = c.availabilityNote   || '';
   renderContactExtraLinks();
+
+  const docs = content.documents || {};
+  document.getElementById('portfolio-updated-at').value = docs.portfolioUpdatedAt || '';
+  document.getElementById('cv-updated-at').value        = docs.cvUpdatedAt        || '';
 }
 
 // ── Roles ────────────────────────────────────────────────
@@ -1137,6 +1147,9 @@ async function uploadPdf(file, type) {
       metaEl.textContent = formatBytes(file.size) + ' · just uploaded';
       noteEl.textContent = 'Upload successful';
       showToast(type === 'portfolio' ? 'Portfolio PDF updated' : 'CV PDF updated');
+      const now = new Date(); const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const label = months[now.getMonth()] + ' ' + now.getFullYear();
+      document.getElementById(type + '-updated-at').value = label;
     } else {
       noteEl.textContent = 'Upload failed — server error';
       showToast('Upload failed', true);
@@ -1283,6 +1296,9 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   content.contact.availabilityStatus= document.getElementById('avail-status').value.trim();
   content.contact.availabilityNote  = document.getElementById('avail-note').value.trim();
   content.contact.extraLinks        = content.contact.extraLinks || [];
+  if (!content.documents) content.documents = {};
+  content.documents.portfolioUpdatedAt = document.getElementById('portfolio-updated-at').value.trim();
+  content.documents.cvUpdatedAt        = document.getElementById('cv-updated-at').value.trim();
 
   try {
     await apiFetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
