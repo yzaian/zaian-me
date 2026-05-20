@@ -87,7 +87,10 @@
 
     /* ─── REVEAL TEXT (clip from below) ─────────────── */
     .r-wrap { display: block; overflow: hidden; }
-    .r-inner { display: block; transform: translateY(105%); }
+    .r-inner { display: block; transform: translateY(105%); animation: reveal-fallback 0s linear 3s forwards; }
+    @keyframes reveal-fallback { to { transform: translateY(0%); } }
+    .photo-clip { animation: clip-fallback 0s linear 3s forwards; }
+    @keyframes clip-fallback { to { clip-path: inset(0% 0 0 0) !important; } }
 
     /* ─── HERO ───────────────────────────────────────── */
     .hero {
