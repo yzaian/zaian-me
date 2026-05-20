@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YZ · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c0c;--card:#1a1a1a;--border:rgba(255,255,255,.12);
+  --text:#e8e8e8;--muted:rgba(255,255,255,.38);--accent:#fff;--danger:#ff4444;
+}
+body{
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:13px;min-height:100vh;display:flex;align-items:center;justify-content:center;
+}
+.box{width:100%;max-width:340px;padding:0 1.5rem;}
+.logo{
+  font-size:.72rem;font-weight:600;letter-spacing:.12em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:2.8rem;display:flex;align-items:center;gap:.5rem;
+}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+h1{font-size:1.2rem;font-weight:600;margin-bottom:.3rem;}
+.sub{font-size:.78rem;color:var(--muted);margin-bottom:1.8rem;}
+.field{margin-bottom:1rem;}
+.field label{
+  display:block;font-size:.67rem;font-weight:500;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;
+}
+.field input{
+  width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:.65rem .8rem;color:var(--text);font-size:.85rem;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .15s;
+}
+.field input:focus{border-color:rgba(255,255,255,.35);}
+.btn{
+  width:100%;padding:.65rem;border-radius:6px;background:var(--accent);color:#000;
+  border:none;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .15s;margin-top:.4rem;
+}
+.btn:hover{opacity:.85;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.error{font-size:.74rem;color:var(--danger);margin-top:.8rem;display:none;text-align:center;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo"><div class="logo-dot"></div>YZ Dashboard</div>
+  <h1>Welcome back</h1>
+  <p class="sub">Enter your password to continue</p>
+  <form id="form">
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pwd" autocomplete="current-password" autofocus>
+    </div>
+    <button class="btn" type="submit" id="btn">Sign in</button>
+    <div class="error" id="err">Incorrect password — try again.</div>
+  </form>
+</div>
+<script>
+if (localStorage.getItem('admin_token')) window.location.href = '/admin/';
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  const pwd = document.getElementById('pwd').value;
+  btn.disabled = true; btn.textContent = 'Signing in…'; err.style.display = 'none';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({password: pwd})
+    });
+    if (r.ok) {
+      const {token} = await r.json();
+      localStorage.setItem('admin_token', token);
+      window.location.href = '/admin/';
+    } else {
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sign in';
+      document.getElementById('pwd').select();
+    }
+  } catch {
+    err.textContent = 'Server offline — try again.';
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+</script>
+</body>
+</html>

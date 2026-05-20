@@ -208,8 +208,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       <div class="nav-item" data-section="documents"><span class="nav-icon">📄</span>Portfolio & CV</div>
     </div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:.45rem;">
     <a class="preview-btn" href="/" target="_blank">↗ Preview Website</a>
+    <button class="preview-btn" id="logout-btn" style="border:none;cursor:pointer;color:rgba(255,255,255,.38);">Sign out</button>
   </div>
 </aside>
 
@@ -552,6 +553,22 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 </div>
 
 <script>
+// ── Auth ────────────────────────────────────────────────
+const _token = localStorage.getItem('admin_token');
+if (!_token) window.location.href = '/admin/login.html';
+const getAuthHeaders = () => ({'X-Admin-Token': _token || ''});
+async function apiFetch(url, opts = {}) {
+  opts.headers = Object.assign({}, opts.headers || {}, getAuthHeaders());
+  const r = await fetch(url, opts);
+  if (r.status === 401) { localStorage.removeItem('admin_token'); window.location.href = '/admin/login.html'; }
+  return r;
+}
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await fetch('/api/logout', {method:'POST', headers: getAuthHeaders()});
+  localStorage.removeItem('admin_token');
+  window.location.href = '/admin/login.html';
+});
+
 const API_RELATIVE = '/api';
 const API_ABSOLUTE = 'http://localhost:4001/api';
 let API = API_RELATIVE;
@@ -1060,7 +1077,7 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
   let imgPath=editingId ? content.design.projects.find(p=>p.id===editingId)?.image||'' : '';
   if(pendingImgFile) {
     const fd=new FormData(); fd.append('image',pendingImgFile);
-    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const r=await apiFetch(API+'/upload',{method:'POST',body:fd});
     const j=await r.json(); imgPath=j.path;
   }
   if(!imgPath) { showToast('Please upload an image',true); return; }
@@ -1069,7 +1086,7 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
   const newGalleryPaths = [];
   for (const gf of pendingGalleryFiles) {
     const fd = new FormData(); fd.append('image', gf.file);
-    const r = await fetch(API+'/upload',{method:'POST',body:fd});
+    const r = await apiFetch(API+'/upload',{method:'POST',body:fd});
     const j = await r.json(); newGalleryPaths.push(j.path);
   }
   const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
@@ -1114,7 +1131,7 @@ async function uploadPdf(file, type) {
   fd.append('pdf', file);
   fd.append('type', type); // 'portfolio' or 'cv'
   try {
-    const r = await fetch(API + '/upload-pdf', { method: 'POST', body: fd });
+    const r = await apiFetch(API + '/upload-pdf', { method: 'POST', body: fd });
     const j = await r.json();
     if (j.ok) {
       metaEl.textContent = formatBytes(file.size) + ' · just uploaded';
@@ -1176,7 +1193,7 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   // Hero photo upload
   if(heroPhotoFile) {
     const fd=new FormData(); fd.append('image',heroPhotoFile);
-    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const r=await apiFetch(API+'/upload',{method:'POST',body:fd});
     const j=await r.json(); content.hero.photo=j.path; heroPhotoFile=null;
   }
 
@@ -1185,19 +1202,19 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   let musicLogoPath  = content.cards?.music?.logoImage  || '';
   if(designLogoFile) {
     const fd=new FormData(); fd.append('image',designLogoFile);
-    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const r=await apiFetch(API+'/upload',{method:'POST',body:fd});
     const j=await r.json(); designLogoPath=j.path; designLogoFile=null;
   }
   if(musicLogoFile) {
     const fd=new FormData(); fd.append('image',musicLogoFile);
-    const r=await fetch(API+'/upload',{method:'POST',body:fd});
+    const r=await apiFetch(API+'/upload',{method:'POST',body:fd});
     const j=await r.json(); musicLogoPath=j.path; musicLogoFile=null;
   }
 
   // Music hero photo upload
   if (musicHeroFile) {
     const fd = new FormData(); fd.append('image', musicHeroFile);
-    const r = await fetch(`${API}/upload`, { method:'POST', body:fd });
+    const r = await apiFetch(`${API}/upload`, { method:'POST', body:fd });
     const j = await r.json();
     content.music.heroImage = j.path;
     musicHeroFile = null;
@@ -1205,7 +1222,7 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   // Album cover upload
   if (albumCoverFile) {
     const fd = new FormData(); fd.append('image', albumCoverFile);
-    const r = await fetch(`${API}/upload`, { method:'POST', body:fd });
+    const r = await apiFetch(`${API}/upload`, { method:'POST', body:fd });
     const j = await r.json();
     if (!content.music.latestAlbum) content.music.latestAlbum = {};
     content.music.latestAlbum.cover = j.path;
@@ -1268,7 +1285,7 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   content.contact.extraLinks        = content.contact.extraLinks || [];
 
   try {
-    await fetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
+    await apiFetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
     showToast('✓ Changes saved!');
   } catch(e) { showToast('Error saving',true); }
 

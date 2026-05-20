@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-import os, json, uuid, mimetypes, base64, hashlib, time
+import os, json, uuid, mimetypes, base64, hashlib, time, secrets
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, urlencode
 import urllib.request
+
+SESSIONS = set()  # in-memory session tokens
 
 PORT = int(os.environ.get('PORT', 4001))
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -46,25 +48,34 @@ def cloudinary_upload(file_bytes, original_filename):
         return None
 
 def check_auth(handler):
-    """Returns True if the request has valid admin credentials."""
     if not ADMIN_PASSWORD:
         return True  # no password set — allow (local dev)
-    auth = handler.headers.get('Authorization', '')
-    if auth.startswith('Basic '):
-        try:
-            decoded = base64.b64decode(auth[6:]).decode('utf-8')
-            _, pwd = decoded.split(':', 1)
-            return pwd == ADMIN_PASSWORD
-        except Exception:
-            pass
+    token = handler.headers.get('X-Admin-Token', '')
+    if token and token in SESSIONS:
+        return True
+    # Also check cookie (for GET requests)
+    for part in handler.headers.get('Cookie', '').split(';'):
+        name, _, value = part.strip().partition('=')
+        if name == 'admin_session' and value in SESSIONS:
+            return True
     return False
 
 def require_auth(handler):
-    """Send 401 if not authenticated."""
-    handler.send_response(401)
-    handler.send_header('WWW-Authenticate', 'Basic realm="Admin"')
-    handler.send_header('Content-Length', '0')
-    handler.end_headers()
+    """Redirect browser to login page, or return 401 JSON for API calls."""
+    is_api = handler.headers.get('X-Admin-Token') is not None or \
+             handler.headers.get('Content-Type', '').startswith('application/json')
+    if not is_api and handler.command == 'GET':
+        handler.send_response(302)
+        handler.send_header('Location', '/admin/login.html')
+        handler.send_header('Content-Length', '0')
+        handler.end_headers()
+    else:
+        body = json.dumps({'error': 'unauthorized'}).encode()
+        handler.send_response(401)
+        handler.send_header('Content-Type', 'application/json')
+        handler.send_header('Content-Length', len(body))
+        handler.end_headers()
+        handler.wfile.write(body)
     return False
 
 def github_push(path, file_bytes, message):
@@ -154,6 +165,9 @@ class Handler(SimpleHTTPRequestHandler):
                 data = json.load(f)
             self.send_json(data)
         elif parsed.path.startswith('/admin'):
+            if parsed.path == '/admin/login.html':
+                super().do_GET()
+                return
             if not check_auth(self):
                 require_auth(self)
                 return
@@ -162,12 +176,35 @@ class Handler(SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
-        if not check_auth(self):
-            require_auth(self)
-            return
         parsed = urlparse(self.path)
         ct = self.headers.get('Content-Type', '')
         cl = int(self.headers.get('Content-Length', 0))
+
+        if parsed.path == '/api/login':
+            body = json.loads(self.rfile.read(cl).decode('utf-8'))
+            if ADMIN_PASSWORD and body.get('password') == ADMIN_PASSWORD:
+                token = secrets.token_hex(32)
+                SESSIONS.add(token)
+                resp = json.dumps({'token': token}).encode()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', len(resp))
+                self.send_header('Set-Cookie', f'admin_session={token}; Path=/; SameSite=Strict')
+                self.end_headers()
+                self.wfile.write(resp)
+            else:
+                self.send_json({'error': 'invalid password'}, 401)
+            return
+
+        if parsed.path == '/api/logout':
+            token = self.headers.get('X-Admin-Token', '')
+            SESSIONS.discard(token)
+            self.send_json({'ok': True})
+            return
+
+        if not check_auth(self):
+            require_auth(self)
+            return
 
         if parsed.path == '/api/content':
             body = self.rfile.read(cl)
