@@ -427,6 +427,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <div class="contact-row"><div class="contact-lbl"><span>🎨</span>Behance</div><div class="field"><input type="url" id="contact-behance"></div></div>
         <div class="contact-row"><div class="contact-lbl"><span>📸</span>Instagram</div><div class="field"><input type="url" id="contact-instagram"></div></div>
       </div>
+
+      <div class="card-section-title" style="margin-top:1.2rem">Extra Links</div>
+      <div class="platform-col-labels">
+        <span>Icon</span><span>Label</span><span>URL</span><span></span>
+      </div>
+      <div id="contact-extra-list"></div>
+      <button class="add-platform-btn" id="add-contact-link-btn">+ Add Link</button>
     </section>
 
     <!-- ── AVAILABILITY ── -->
@@ -679,6 +686,7 @@ function populate() {
   document.getElementById('contact-instagram').value= c.instagram|| '';
   document.getElementById('avail-status').value     = c.availabilityStatus || '';
   document.getElementById('avail-note').value       = c.availabilityNote   || '';
+  renderContactExtraLinks();
 }
 
 // ── Roles ────────────────────────────────────────────────
@@ -724,6 +732,39 @@ function renderDesignStats() {
 document.getElementById('add-stat-btn').addEventListener('click',()=>{
   if(!content.design.stats) content.design.stats=[];
   content.design.stats.push('New Stat'); renderDesignStats();
+});
+
+// ── Contact Extra Links ──────────────────────────────────
+function renderContactExtraLinks() {
+  if (!content.contact.extraLinks) content.contact.extraLinks = [];
+  const list = document.getElementById('contact-extra-list');
+  const links = content.contact.extraLinks;
+  list.innerHTML = links.map((l, i) => `
+    <div class="platform-edit-row" data-i="${i}" style="grid-template-columns:48px 1fr 2fr 28px">
+      <input class="platform-icon-inp" type="text" value="${l.icon||''}" placeholder="🎵" data-field="icon">
+      <input type="text" value="${l.label||''}" placeholder="Spotify" data-field="label">
+      <input type="url" value="${l.url||''}" placeholder="https://..." data-field="url">
+      <button class="platform-del-btn" data-i="${i}">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('.platform-edit-row input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.closest('.platform-edit-row').dataset.i;
+      content.contact.extraLinks[i][e.target.dataset.field] = e.target.value;
+    });
+  });
+  list.querySelectorAll('.platform-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      content.contact.extraLinks.splice(+btn.dataset.i, 1);
+      renderContactExtraLinks();
+    });
+  });
+}
+document.getElementById('add-contact-link-btn').addEventListener('click', () => {
+  if (!content.contact.extraLinks) content.contact.extraLinks = [];
+  content.contact.extraLinks.push({ icon: '', label: '', url: '' });
+  renderContactExtraLinks();
+  const rows = document.querySelectorAll('#contact-extra-list .platform-edit-row');
+  if (rows.length) rows[rows.length-1].querySelector('input')?.focus();
 });
 
 // ── Music Platforms ──────────────────────────────────────
@@ -1224,6 +1265,7 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   content.contact.instagram         = document.getElementById('contact-instagram').value.trim();
   content.contact.availabilityStatus= document.getElementById('avail-status').value.trim();
   content.contact.availabilityNote  = document.getElementById('avail-note').value.trim();
+  content.contact.extraLinks        = content.contact.extraLinks || [];
 
   try {
     await fetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});

@@ -322,7 +322,7 @@
     .then(data => {
       const c = data.contact || {};
       const grid = document.getElementById('contact-grid');
-      grid.innerHTML = CARDS_DEF.map(def => {
+      const fixedCards = CARDS_DEF.map(def => {
         const val = c[def.field] || '';
         const href = val ? (def.prefix + val) : '#';
         const handle = def.field === 'email' ? val
@@ -337,7 +337,19 @@
           </div>
           <span class="card-arrow">↗</span>
         </a>`;
-      }).join('');
+      });
+      const extraCards = (c.extraLinks || []).filter(l => l.url).map(l => {
+        const handle = l.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        return `<a class="contact-card js-card" href="${l.url}" target="_blank">
+          <span class="card-icon">${l.icon || '🔗'}</span>
+          <div class="card-body">
+            <div class="card-label">${l.label || 'Link'}</div>
+            <div class="card-handle">${handle}</div>
+          </div>
+          <span class="card-arrow">↗</span>
+        </a>`;
+      });
+      grid.innerHTML = [...fixedCards, ...extraCards].join('');
       if (c.availabilityStatus) document.getElementById('avail-status-text').textContent = c.availabilityStatus;
       if (c.availabilityNote)   document.getElementById('avail-note-text').textContent   = c.availabilityNote;
       // re-init card animations
