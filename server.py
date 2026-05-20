@@ -9,8 +9,31 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 CONTENT_FILE = os.path.join(BASE, 'content.json')
 UPLOAD_DIR   = os.path.join(BASE, 'assets', 'portfolio')
 
-GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
-GITHUB_REPO  = os.environ.get('GITHUB_REPO', 'yzaian/zaian-me')
+GITHUB_TOKEN   = os.environ.get('GITHUB_TOKEN', '')
+GITHUB_REPO    = os.environ.get('GITHUB_REPO', 'yzaian/zaian-me')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+
+def check_auth(handler):
+    """Returns True if the request has valid admin credentials."""
+    if not ADMIN_PASSWORD:
+        return True  # no password set — allow (local dev)
+    auth = handler.headers.get('Authorization', '')
+    if auth.startswith('Basic '):
+        try:
+            decoded = base64.b64decode(auth[6:]).decode('utf-8')
+            _, pwd = decoded.split(':', 1)
+            return pwd == ADMIN_PASSWORD
+        except Exception:
+            pass
+    return False
+
+def require_auth(handler):
+    """Send 401 if not authenticated."""
+    handler.send_response(401)
+    handler.send_header('WWW-Authenticate', 'Basic realm="Admin"')
+    handler.send_header('Content-Length', '0')
+    handler.end_headers()
+    return False
 
 def github_push(path, file_bytes, message):
     """Push a file to GitHub to make changes persistent."""
@@ -98,10 +121,18 @@ class Handler(SimpleHTTPRequestHandler):
             with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.send_json(data)
+        elif parsed.path.startswith('/admin'):
+            if not check_auth(self):
+                require_auth(self)
+                return
+            super().do_GET()
         else:
             super().do_GET()
 
     def do_POST(self):
+        if not check_auth(self):
+            require_auth(self)
+            return
         parsed = urlparse(self.path)
         ct = self.headers.get('Content-Type', '')
         cl = int(self.headers.get('Content-Length', 0))
