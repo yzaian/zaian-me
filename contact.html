@@ -73,7 +73,7 @@
 
     /* ─── TEXT REVEAL ────────────────────────── */
     .r-wrap { display: block; overflow: hidden; }
-    .r-inner { display: block; transform: translateY(105%); }
+    .r-inner { display: block; }
 
     /* ─── HERO ───────────────────────────────── */
     .hero {
@@ -297,8 +297,9 @@
 
   /* ── Curtain in ── */
   gsap.set('#curtain', { scaleY: 1, transformOrigin: 'top' });
+  gsap.set(['#ey','#h1','#h2'], { y: '105%' });
   gsap.to('#curtain', { scaleY: 0, duration: .9, ease: 'power3.inOut', delay: .05 });
-  setTimeout(function(){var c=document.getElementById('curtain');if(c&&parseFloat(getComputedStyle(c).transform.split(',')[3]||'1')>0.1){c.style.transition='transform 0.6s ease';c.style.transform='scaleY(0)';c.style.transformOrigin='top';}},2500);
+  setTimeout(function(){var c=document.getElementById('curtain');if(c){c.style.opacity='0';c.style.pointerEvents='none';}},2500);
 
   /* ── Nav ── */
   gsap.from('#nav', { y: -20, opacity: 0, duration: .7, ease: 'power2.out', delay: .8 });

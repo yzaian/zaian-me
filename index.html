@@ -466,12 +466,7 @@
 
   <!-- DESIGN -->
   <a class="card" href="design.html" onclick="navigate(event,'design.html')" id="card-d">
-    <div class="card-previews">
-      <img src="assets/portfolio/polex-branding.png" alt="">
-      <img src="assets/portfolio/heros-branding.png" alt="">
-      <img src="assets/portfolio/sporship-branding.png" alt="">
-      <img src="assets/portfolio/misrology-branding.png" alt="">
-    </div>
+    <div class="card-previews" id="card-d-previews"></div>
 
     <div class="card-head">
       <div class="card-logo" id="logo-d">7.</div>
@@ -640,11 +635,14 @@ function magneticLogo(card, logo) {
         document.querySelector('.marquee-track').innerHTML = items + items;
       }
 
+      // ── Helper for image paths (handles Cloudinary URLs and local paths)
+      const imgSrc = p => p.startsWith('http') ? p : '/' + p;
+
       // ── Card logos
       const logoD = document.getElementById('logo-d');
       const logoM = document.getElementById('logo-m');
-      if(cd.logoImage) logoD.innerHTML = `<img src="/${cd.logoImage}" alt="" style="max-height:2.4rem;max-width:100%;object-fit:contain;display:block;">`;
-      if(cm.logoImage) logoM.innerHTML = `<img src="/${cm.logoImage}" alt="" style="max-height:2.2rem;max-width:100%;object-fit:contain;display:block;">`;
+      if(cd.logoImage) logoD.innerHTML = `<img src="${imgSrc(cd.logoImage)}" alt="" style="max-height:2.4rem;max-width:100%;object-fit:contain;display:block;">`;
+      if(cm.logoImage) logoM.innerHTML = `<img src="${imgSrc(cm.logoImage)}" alt="" style="max-height:2.2rem;max-width:100%;object-fit:contain;display:block;">`;
 
       // ── Card titles & descriptions
       if(cd.title) document.querySelector('#card-d .card-title').textContent = cd.title;
@@ -653,6 +651,16 @@ function magneticLogo(card, logo) {
       if(cm.title) document.querySelector('#card-m .card-title').textContent = cm.title;
       if(cm.desc)  document.querySelector('#card-m .card-desc').textContent  = cm.desc;
       if(cm.sub)   document.querySelector('#card-m .card-sub').textContent   = cm.sub;
+
+      // ── Card previews from design.projects
+      const projects = (data.design && data.design.projects) || [];
+      const previewsEl = document.getElementById('card-d-previews');
+      if(previewsEl && projects.length) {
+        previewsEl.innerHTML = projects.slice(0, 4)
+          .filter(p => p && p.image)
+          .map(p => `<img src="${imgSrc(p.image)}" alt="">`)
+          .join('');
+      }
 
     }).catch(()=>{});
 })();
