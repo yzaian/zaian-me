@@ -538,8 +538,8 @@ gsap.set('#hero-photo', { scale: 1.08 });
 const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
 // Curtain lifts
+setTimeout(function(){var c=document.getElementById('curtain');if(c){c.style.opacity='0';c.style.pointerEvents='none';}},2500);
 tl.to('#curtain', { scaleY: 0, transformOrigin: 'top', duration: 1, ease: 'power3.inOut' })
-setTimeout(function(){var c=document.getElementById('curtain');if(c&&parseFloat(getComputedStyle(c).transform.split(',')[3]||'1')>0.1){c.style.transition='transform 0.6s ease';c.style.transform='scaleY(0)';c.style.transformOrigin='top';}},2500);
   .from('#nav', { y: -18, opacity: 0, duration: .6 }, '-=.1')
 
   // Eyebrow
