@@ -175,6 +175,27 @@ class Handler(SimpleHTTPRequestHandler):
             with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.send_json(data)
+        elif parsed.path == '/api/health':
+            # Verify GitHub persistence by hitting the repo with the current token
+            status = {'github_token_set': bool(GITHUB_TOKEN), 'github_writable': False, 'error': ''}
+            if GITHUB_TOKEN:
+                try:
+                    api_url = f'https://api.github.com/repos/{GITHUB_REPO}'
+                    req = urllib.request.Request(api_url, headers={
+                        'Authorization': f'token {GITHUB_TOKEN}',
+                        'Accept': 'application/vnd.github.v3+json',
+                    })
+                    with urllib.request.urlopen(req) as resp:
+                        info = json.loads(resp.read())
+                        perms = info.get('permissions', {})
+                        status['github_writable'] = bool(perms.get('push'))
+                        if not status['github_writable']:
+                            status['error'] = 'Token works but has no write access to repo'
+                except Exception as e:
+                    status['error'] = f'GitHub API error: {e}'
+            else:
+                status['error'] = 'GITHUB_TOKEN env var is not set on Render'
+            self.send_json(status)
         else:
             super().do_GET()
 

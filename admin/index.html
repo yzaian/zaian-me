@@ -221,6 +221,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
   </div>
   <div class="content">
 
+    <div id="persistence-banner" style="display:none;padding:.75rem 1rem;border:1px solid;border-radius:6px;margin-bottom:1.5rem;font-size:.85rem;font-weight:500;"></div>
+
     <!-- ── HERO ── -->
     <section class="section active" id="sec-hero">
       <div class="section-header"><div class="section-title">Hero & Photo</div><div class="section-sub">Main hero on the home page</div></div>
@@ -630,9 +632,31 @@ async function checkServer() {
 async function load() {
   const ok = await checkServer();
   if (!ok) return;
+  await checkPersistence();
   const r = await fetch(API + '/content');
   content = await r.json();
   populate();
+}
+
+async function checkPersistence() {
+  try {
+    const r = await fetch(API + '/health');
+    const h = await r.json();
+    const banner = document.getElementById('persistence-banner');
+    if (!banner) return;
+    if (h.github_writable) {
+      banner.style.background = '#1a3a1a';
+      banner.style.borderColor = '#2d6a2d';
+      banner.style.color = '#9fdfa0';
+      banner.textContent = '✓ Saves are persisted to GitHub. Safe to edit.';
+    } else {
+      banner.style.background = '#3a1a1a';
+      banner.style.borderColor = '#6a2d2d';
+      banner.style.color = '#ffb3b3';
+      banner.textContent = '⚠ DO NOT EDIT — Saves will be lost on restart. ' + (h.error || 'Fix GITHUB_TOKEN on Render.');
+    }
+    banner.style.display = 'block';
+  } catch(e) {}
 }
 
 function populate() {
