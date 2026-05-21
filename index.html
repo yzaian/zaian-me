@@ -614,12 +614,12 @@ function magneticLogo(card, logo) {
       // ── Photo label
       if(h.nameFirst || h.nameLast) {
         const lbl = document.querySelector('.photo-label');
-        if(lbl) lbl.textContent = `${h.nameFirst||''} ${h.nameLast||''} · ${h.year||'2025'}`;
+        if(lbl) lbl.textContent = `${h.nameFirst||''} ${h.nameLast||''} · ${h.year||new Date().getFullYear()}`;
       }
 
       // ── Eyebrow
       const ey = document.querySelector('#ey .r-inner');
-      if(h.location && ey) ey.textContent = `${h.location} · ${h.year||'2025'}`;
+      if(h.location && ey) ey.textContent = `${h.location} · ${h.year||new Date().getFullYear()}`;
 
       // ── Bio
       if(h.bio) document.getElementById('bio').textContent = h.bio;

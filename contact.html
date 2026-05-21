@@ -282,11 +282,12 @@
 </div>
 
 <footer>
-  <span>Yahia Zaian © 2025</span>
+  <span>Yahia Zaian © <span class="js-year">2025</span></span>
   <a href="index.html" onclick="navigate(event,'index.html')">← Back to Home</a>
 </footer>
 
 <script>
+  document.querySelectorAll('.js-year').forEach(el => el.textContent = new Date().getFullYear());
   gsap.registerPlugin(ScrollTrigger);
 
   /* ── Lenis ── */
