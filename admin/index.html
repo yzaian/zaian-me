@@ -1301,8 +1301,13 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   content.documents.cvUpdatedAt        = document.getElementById('cv-updated-at').value.trim();
 
   try {
-    await apiFetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
-    showToast('✓ Changes saved!');
+    const r = await apiFetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
+    const resp = await r.json();
+    if (resp.persisted === false) {
+      showToast('⚠ Saved locally but NOT to GitHub — changes will be lost on redeploy. Check GITHUB_TOKEN on Render.', true);
+    } else {
+      showToast('✓ Changes saved and published to GitHub');
+    }
   } catch(e) { showToast('Error saving',true); }
 
   btn.disabled=false; btn.textContent='Save Changes';

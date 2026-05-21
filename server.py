@@ -79,9 +79,9 @@ def require_auth(handler):
     return False
 
 def github_push(path, file_bytes, message):
-    """Push a file to GitHub to make changes persistent."""
+    """Push a file to GitHub to make changes persistent. Returns (ok: bool, error: str)."""
     if not GITHUB_TOKEN:
-        return
+        return False, 'GITHUB_TOKEN not configured on server'
     api_url = f'https://api.github.com/repos/{GITHUB_REPO}/contents/{path}'
     headers = {
         'Authorization': f'token {GITHUB_TOKEN}',
@@ -102,8 +102,11 @@ def github_push(path, file_bytes, message):
     try:
         req = urllib.request.Request(api_url, data=json.dumps(body).encode(), headers=headers, method='PUT')
         urllib.request.urlopen(req)
+        return True, ''
     except Exception as e:
-        print(f'GitHub push failed: {e}')
+        err = str(e)
+        print(f'GitHub push failed: {err}')
+        return False, err
 
 def parse_multipart(rfile, content_type, content_length):
     boundary = None
@@ -211,8 +214,12 @@ class Handler(SimpleHTTPRequestHandler):
             data = json.loads(body.decode('utf-8'))
             with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            github_push('content.json', body, 'Update content via dashboard')
-            self.send_json({'ok': True})
+            ok, err = github_push('content.json', body, 'Update content via dashboard')
+            if ok:
+                self.send_json({'ok': True, 'persisted': True})
+            else:
+                # Save succeeded locally, but NOT persisted to GitHub. Will be lost on redeploy.
+                self.send_json({'ok': True, 'persisted': False, 'warning': err or 'GitHub push failed — changes will be lost on server restart'})
 
         elif parsed.path == '/api/upload':
             filename, file_bytes = parse_multipart(self.rfile, ct, cl)
