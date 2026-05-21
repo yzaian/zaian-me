@@ -19,6 +19,45 @@ CLOUDINARY_CLOUD = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_KEY   = os.environ.get('CLOUDINARY_API_KEY', '')
 CLOUDINARY_SECRET= os.environ.get('CLOUDINARY_API_SECRET', '')
 
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+
+def supabase_get_content():
+    """Read content from Supabase. Returns (data, error)."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return None, 'Supabase not configured'
+    try:
+        url = f'{SUPABASE_URL}/rest/v1/site_content?id=eq.main&select=data'
+        req = urllib.request.Request(url, headers={
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            rows = json.loads(resp.read())
+            if rows:
+                return rows[0]['data'], ''
+            return None, 'No row found in site_content'
+    except Exception as e:
+        return None, f'Supabase read error: {e}'
+
+def supabase_save_content(data):
+    """Save content to Supabase. Returns (ok, error)."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return False, 'Supabase not configured'
+    try:
+        url = f'{SUPABASE_URL}/rest/v1/site_content?id=eq.main'
+        body = json.dumps({'data': data}).encode()
+        req = urllib.request.Request(url, data=body, method='PATCH', headers={
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal',
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return True, ''
+    except Exception as e:
+        return False, f'Supabase write error: {e}'
+
 def cloudinary_upload(file_bytes, original_filename):
     if not CLOUDINARY_CLOUD:
         return None
@@ -172,29 +211,33 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == '/api/content':
-            with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            # Try Supabase first; fall back to local file if unavailable
+            data, err = supabase_get_content()
+            if data is None:
+                try:
+                    with open(CONTENT_FILE, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except Exception:
+                    data = {}
+            else:
+                # Cache to local file for fallback resilience
+                try:
+                    with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
             self.send_json(data)
         elif parsed.path == '/api/health':
-            # Verify GitHub persistence by hitting the repo with the current token
-            status = {'github_token_set': bool(GITHUB_TOKEN), 'github_writable': False, 'error': ''}
-            if GITHUB_TOKEN:
-                try:
-                    api_url = f'https://api.github.com/repos/{GITHUB_REPO}'
-                    req = urllib.request.Request(api_url, headers={
-                        'Authorization': f'token {GITHUB_TOKEN}',
-                        'Accept': 'application/vnd.github.v3+json',
-                    })
-                    with urllib.request.urlopen(req) as resp:
-                        info = json.loads(resp.read())
-                        perms = info.get('permissions', {})
-                        status['github_writable'] = bool(perms.get('push'))
-                        if not status['github_writable']:
-                            status['error'] = 'Token works but has no write access to repo'
-                except Exception as e:
-                    status['error'] = f'GitHub API error: {e}'
+            # Verify persistence backend is working
+            status = {'backend': 'supabase', 'github_writable': False, 'error': ''}
+            if SUPABASE_URL and SUPABASE_KEY:
+                data, err = supabase_get_content()
+                if data is not None:
+                    status['github_writable'] = True  # field name kept for dashboard compatibility
+                else:
+                    status['error'] = err or 'Supabase unreachable'
             else:
-                status['error'] = 'GITHUB_TOKEN env var is not set on Render'
+                status['error'] = 'SUPABASE_URL or SUPABASE_KEY env var missing on Render'
             self.send_json(status)
         else:
             super().do_GET()
@@ -233,9 +276,13 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == '/api/content':
             body = self.rfile.read(cl)
             data = json.loads(body.decode('utf-8'))
-            with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            ok, err = github_push('content.json', body, 'Update content via dashboard')
+            # Write to Supabase first (durable). Cache to local file as fallback.
+            ok, err = supabase_save_content(data)
+            try:
+                with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
             if ok:
                 self.send_json({'ok': True, 'persisted': True})
             else:
@@ -296,23 +343,17 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json({'error': 'not found'}, 404)
 
 def fetch_latest_content():
-    """On startup, pull latest content.json from GitHub so redeploys don't lose dashboard edits."""
-    if not GITHUB_TOKEN:
+    """On startup, pull latest content from Supabase so the local cache is fresh."""
+    data, err = supabase_get_content()
+    if data is None:
+        print(f'  Supabase sync skipped: {err}')
         return
     try:
-        api_url = f'https://api.github.com/repos/{GITHUB_REPO}/contents/content.json'
-        req = urllib.request.Request(api_url, headers={
-            'Authorization': f'token {GITHUB_TOKEN}',
-            'Accept': 'application/vnd.github.v3+json'
-        })
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read())
-            content = base64.b64decode(data['content']).decode('utf-8')
-            with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
-                f.write(content)
-        print('  Content synced from GitHub.')
+        with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print('  Content synced from Supabase.')
     except Exception as e:
-        print(f'  Could not sync content from GitHub: {e}')
+        print(f'  Failed to cache content locally: {e}')
 
 if __name__ == '__main__':
     os.makedirs(UPLOAD_DIR, exist_ok=True)
