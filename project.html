@@ -160,9 +160,9 @@ function renderProject(p, allProjects) {
 
   const galleryHTML = images.length ? `
     <div class="proj-gallery ${galleryClass}">
-      ${images.map(img=>`
+      ${images.map((img,i)=>`
         <div class="gallery-item">
-          <img src="${img.startsWith('http') ? img : '/' + img}" alt="${p.name}" loading="lazy">
+          <img src="${img.startsWith('http') ? img : '/' + img}" alt="${p.name}" ${i>2?'loading="lazy"':''} onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a';">
         </div>`).join('')}
     </div>` : '';
 

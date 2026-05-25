@@ -516,7 +516,7 @@
     grid.innerHTML = projects.map((p, i) => `
       <div class="item js-item" data-id="${p.id}" data-cat="${p.category}">
         <div class="item-img-wrap">
-          <img src="${p.image && p.image.startsWith('http') ? p.image : '/' + p.image}" alt="${p.name}" loading="lazy">
+          <img src="${p.image && p.image.startsWith('http') ? p.image : '/' + p.image}" alt="${p.name}" onerror="this.style.opacity=.3;this.style.background='#1a1a1a';">
         </div>
         <div class="item-content">
           <span class="item-num">${String(i+1).padStart(2,'0')}</span>

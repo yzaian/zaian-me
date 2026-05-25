@@ -1106,48 +1106,71 @@ document.getElementById('modal-gallery-file').addEventListener('change', e => {
 });
 
 document.getElementById('modal-save').addEventListener('click',async()=>{
-  const name=document.getElementById('modal-name').value.trim();
-  if(!name) { showToast('Project name is required',true); return; }
-  let imgPath=editingId ? content.design.projects.find(p=>p.id===editingId)?.image||'' : '';
-  if(pendingImgFile) {
-    const fd=new FormData(); fd.append('image',pendingImgFile);
-    const r=await apiFetch(API+'/upload',{method:'POST',body:fd});
-    const j=await r.json(); imgPath=j.path;
-  }
-  if(!imgPath) { showToast('Please upload an image',true); return; }
+  const saveBtn = document.getElementById('modal-save');
+  const originalText = saveBtn.textContent;
+  try {
+    const name=document.getElementById('modal-name').value.trim();
+    if(!name) { showToast('Project name is required',true); return; }
 
-  // Upload gallery images
-  const newGalleryPaths = [];
-  for (const gf of pendingGalleryFiles) {
-    const fd = new FormData(); fd.append('image', gf.file);
-    const r = await apiFetch(API+'/upload',{method:'POST',body:fd});
-    const j = await r.json(); newGalleryPaths.push(j.path);
-  }
-  const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
-  const cat=document.getElementById('modal-category').value;
-  let catLabel=document.getElementById('modal-cat-label').value.trim();
-  if(cat==='other') catLabel=document.getElementById('modal-cat-custom').value.trim()||catLabel;
-  if(!catLabel) catLabel=CAT_LABELS[cat]||cat;
+    let imgPath=editingId ? content.design.projects.find(p=>p.id===editingId)?.image||'' : '';
 
-  const proj={
-    id:          editingId||String(Date.now()),
-    name,
-    category:    cat,
-    categoryLabel: catLabel,
-    description: document.getElementById('modal-desc').value.trim(),
-    image:       imgPath,
-    link:        document.getElementById('modal-link').value.trim(),
-    images:      allGalleryPaths
-  };
-  if(editingId) {
-    const idx=content.design.projects.findIndex(p=>p.id===editingId);
-    content.design.projects[idx]=proj;
-  } else {
-    content.design.projects.push(proj);
+    // Helper — uploads one file and returns the path
+    const uploadOne = async (file, label) => {
+      const fd = new FormData(); fd.append('image', file);
+      const r = await apiFetch(API+'/upload',{method:'POST',body:fd});
+      if(!r.ok) throw new Error(label+' upload failed: HTTP '+r.status);
+      const j = await r.json();
+      if(!j.path) throw new Error(label+' upload returned no path');
+      return j.path;
+    };
+
+    const totalUploads = (pendingImgFile ? 1 : 0) + pendingGalleryFiles.length;
+    if (totalUploads > 0) {
+      saveBtn.textContent = `Uploading ${totalUploads} image${totalUploads>1?'s':''}…`;
+    }
+
+    // Run main + all gallery uploads in parallel — much faster than sequential
+    const [mainPath, ...newGalleryPaths] = await Promise.all([
+      pendingImgFile ? uploadOne(pendingImgFile, 'Main image') : Promise.resolve(imgPath),
+      ...pendingGalleryFiles.map((gf, i) => uploadOne(gf.file, `Gallery image ${i+1}`))
+    ]);
+    imgPath = mainPath;
+
+    if(!imgPath) { showToast('Please upload an image',true); return; }
+    const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
+
+    const cat=document.getElementById('modal-category').value;
+    let catLabel=document.getElementById('modal-cat-label').value.trim();
+    if(cat==='other') catLabel=document.getElementById('modal-cat-custom').value.trim()||catLabel;
+    if(!catLabel) catLabel=CAT_LABELS[cat]||cat;
+
+    const proj={
+      id:          editingId||String(Date.now()),
+      name,
+      category:    cat,
+      categoryLabel: catLabel,
+      description: document.getElementById('modal-desc').value.trim(),
+      image:       imgPath,
+      link:        document.getElementById('modal-link').value.trim(),
+      images:      allGalleryPaths
+    };
+    if(editingId) {
+      const idx=content.design.projects.findIndex(p=>p.id===editingId);
+      content.design.projects[idx]=proj;
+    } else {
+      content.design.projects.push(proj);
+    }
+    closeModal(); renderProjects();
+    showToast('Project saved — click Save Changes to publish');
+  } catch(err) {
+    console.error('Save Project failed:', err);
+    showToast('Save failed: ' + (err.message || err), true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
   }
-  closeModal(); renderProjects();
-  showToast('Project saved — click Save Changes to publish');
 });
 
 // ── PDF uploads ──────────────────────────────────────────
