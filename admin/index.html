@@ -125,8 +125,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .btn-primary{padding:.4rem .9rem;border-radius:5px;background:var(--accent);color:#000;border:none;font-size:.73rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
 .btn-primary:hover{opacity:.88;}
 .proj-img-preview{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:5px;margin-bottom:.75rem;background:#1a1a1a;border:1px solid var(--border2);display:block;}
-.cat-custom-wrap{display:none;margin-top:.4rem;}
-.cat-custom-wrap.show{display:block;}
+/* ─── CATEGORY CHIPS ─── */
+.cat-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem;}
+.cat-chip{padding:.45rem .85rem;border-radius:999px;background:var(--card2);border:1px solid var(--border2);color:var(--muted);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;}
+.cat-chip:hover{border-color:rgba(255,255,255,.3);color:var(--text);}
+.cat-chip.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.cat-chip.custom{padding-right:.55rem;}
+.cat-chip.custom::after{content:' ×';opacity:.6;}
 
 /* ─── LOGO UPLOAD ─── */
 .logo-upload-row{display:flex;align-items:center;gap:1.1rem;background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:.9rem 1.1rem;}
@@ -509,28 +514,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <label>Project Image</label>
         <input type="file" id="modal-img-file" accept="image/*" style="background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem;color:var(--text);width:100%">
       </div>
-      <div class="form-row">
+      <div class="form-row single">
         <div class="field"><label>Project Name</label><input type="text" id="modal-name" placeholder="e.g. Polex"></div>
-        <div class="field">
-          <label>Section / Category</label>
-          <select id="modal-category">
-            <option value="branding">Branding</option>
-            <option value="social">Social Media</option>
-            <option value="keyvisual">Key Visual</option>
-            <option value="uiux">UI / UX</option>
-            <option value="packaging">Packaging</option>
-            <option value="motion">Motion Graphics</option>
-            <option value="identity">Brand Identity</option>
-            <option value="editorial">Editorial</option>
-            <option value="other">Other (custom)</option>
-          </select>
-          <div class="cat-custom-wrap" id="cat-custom-wrap">
-            <input type="text" id="modal-cat-custom" placeholder="Type custom category name...">
-          </div>
-        </div>
       </div>
       <div class="form-row single">
-        <div class="field"><label>Category Label (shown on card — can include country flag)</label><input type="text" id="modal-cat-label" placeholder="e.g. Branding · Egypt 🇪🇬"></div>
+        <div class="field">
+          <label>Categories (click to select one or more)</label>
+          <div class="cat-chips" id="modal-cat-chips"></div>
+          <input type="text" id="modal-cat-custom" placeholder="Add custom category and press Enter (e.g. Branding · Egypt 🇪🇬)">
+        </div>
       </div>
       <div class="form-row single">
         <div class="field"><label>Description</label><textarea id="modal-desc" rows="4" placeholder="What you did, for whom, the challenge, the result..."></textarea></div>
@@ -608,6 +600,49 @@ const CAT_LABELS = {
   uiux:'UI / UX', packaging:'Packaging', motion:'Motion Graphics',
   identity:'Brand Identity', editorial:'Editorial', other:''
 };
+const STANDARD_CATS = ['branding','social','keyvisual','uiux','packaging','motion','identity','editorial'];
+
+// ── Category chips ──────────────────────────────────────
+function renderCategoryChips(selected = []) {
+  // `selected` is an array of slugs. Custom slugs (not in STANDARD_CATS) become custom chips.
+  const container = document.getElementById('modal-cat-chips');
+  const customCatLabels = window._customCatLabels || {};
+  container.innerHTML = '';
+  // Standard category chips
+  STANDARD_CATS.forEach(slug => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'cat-chip' + (selected.includes(slug) ? ' active' : '');
+    chip.dataset.cat = slug;
+    chip.dataset.label = CAT_LABELS[slug];
+    chip.textContent = CAT_LABELS[slug];
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+    container.appendChild(chip);
+  });
+  // Custom chips (selected categories not in STANDARD_CATS)
+  selected.filter(s => !STANDARD_CATS.includes(s)).forEach(slug => {
+    addCustomChip(slug, customCatLabels[slug] || slug);
+  });
+}
+function addCustomChip(slug, label) {
+  const container = document.getElementById('modal-cat-chips');
+  if (container.querySelector(`[data-cat="${slug}"]`)) return; // already present
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'cat-chip active custom';
+  chip.dataset.cat = slug;
+  chip.dataset.label = label;
+  chip.textContent = label;
+  chip.addEventListener('click', () => chip.remove());
+  container.appendChild(chip);
+}
+function getSelectedCategories() {
+  const chips = document.querySelectorAll('#modal-cat-chips .cat-chip.active');
+  return {
+    slugs:  [...chips].map(c => c.dataset.cat),
+    labels: [...chips].map(c => c.dataset.label),
+  };
+}
 
 // ── Server check ─────────────────────────────────────────
 async function checkServer() {
@@ -1015,23 +1050,30 @@ function openModal(id) {
     const p=content.design.projects.find(x=>x.id===id);
     document.getElementById('modal-title').textContent='Edit Project';
     document.getElementById('modal-name').value       = p.name;
-    document.getElementById('modal-category').value   = p.category;
-    document.getElementById('modal-cat-label').value  = p.categoryLabel;
     document.getElementById('modal-desc').value       = p.description||'';
     document.getElementById('modal-link').value       = p.link||'';
     const prev=document.getElementById('modal-img-preview');
-    prev.src='/'+p.image; prev.style.display='block';
-    handleCatCustom(p.category);
-    if(p.category==='other') document.getElementById('modal-cat-custom').value=p.categoryLabel;
+    prev.src = p.image && p.image.startsWith('http') ? p.image : '/' + p.image;
+    prev.style.display='block';
+    // Build selected categories list — support both new `categories` array and old `category` singular
+    const selectedSlugs = (p.categories && p.categories.length) ? p.categories : (p.category ? [p.category] : []);
+    const selectedLabels = (p.categoryLabels && p.categoryLabels.length) ? p.categoryLabels : (p.categoryLabel ? [p.categoryLabel] : []);
+    // Cache custom labels so chips render with the right text
+    window._customCatLabels = {};
+    selectedSlugs.forEach((slug, i) => {
+      if (!STANDARD_CATS.includes(slug)) window._customCatLabels[slug] = selectedLabels[i] || slug;
+    });
+    renderCategoryChips(selectedSlugs);
+    document.getElementById('modal-cat-custom').value = '';
     existingGalleryImages = [...(p.images||[])];
     renderGalleryThumbs();
   } else {
     document.getElementById('modal-title').textContent='Add Project';
-    ['modal-name','modal-cat-label','modal-desc','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('modal-category').value='branding';
+    ['modal-name','modal-desc','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('modal-img-preview').style.display='none';
     document.getElementById('modal-img-file').value='';
-    handleCatCustom('branding');
+    window._customCatLabels = {};
+    renderCategoryChips([]);
     existingGalleryImages = []; pendingGalleryFiles = [];
     renderGalleryThumbs();
   }
@@ -1074,16 +1116,15 @@ document.getElementById('modal-close').addEventListener('click',closeModal);
 document.getElementById('modal-cancel').addEventListener('click',closeModal);
 document.getElementById('proj-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('proj-modal')) closeModal(); });
 
-function handleCatCustom(val) {
-  document.getElementById('cat-custom-wrap').classList.toggle('show', val==='other');
-}
-document.getElementById('modal-category').addEventListener('change',e=>{
-  const val=e.target.value;
-  handleCatCustom(val);
-  const catLabel=document.getElementById('modal-cat-label');
-  if(val!=='other' && (!catLabel.value||Object.values(CAT_LABELS).includes(catLabel.value))) {
-    catLabel.value=CAT_LABELS[val]||'';
-  }
+// Custom category input — press Enter to add as an active chip
+document.getElementById('modal-cat-custom').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const label = e.target.value.trim();
+  if (!label) return;
+  const slug = label.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'custom-'+Date.now();
+  addCustomChip(slug, label);
+  e.target.value = '';
 });
 
 document.getElementById('modal-img-file').addEventListener('change',e=>{
@@ -1141,20 +1182,21 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
     if(!imgPath) { showToast('Please upload an image',true); return; }
     const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
 
-    const cat=document.getElementById('modal-category').value;
-    let catLabel=document.getElementById('modal-cat-label').value.trim();
-    if(cat==='other') catLabel=document.getElementById('modal-cat-custom').value.trim()||catLabel;
-    if(!catLabel) catLabel=CAT_LABELS[cat]||cat;
+    const sel = getSelectedCategories();
+    if (sel.slugs.length === 0) { showToast('Pick at least one category', true); return; }
 
     const proj={
-      id:          editingId||String(Date.now()),
+      id:            editingId||String(Date.now()),
       name,
-      category:    cat,
-      categoryLabel: catLabel,
-      description: document.getElementById('modal-desc').value.trim(),
-      image:       imgPath,
-      link:        document.getElementById('modal-link').value.trim(),
-      images:      allGalleryPaths
+      categories:    sel.slugs,
+      categoryLabels: sel.labels,
+      // Backwards-compat fields (used by older code paths and as fallback display):
+      category:      sel.slugs[0],
+      categoryLabel: sel.labels.join(' · '),
+      description:   document.getElementById('modal-desc').value.trim(),
+      image:         imgPath,
+      link:          document.getElementById('modal-link').value.trim(),
+      images:        allGalleryPaths
     };
     if(editingId) {
       const idx=content.design.projects.findIndex(p=>p.id===editingId);
