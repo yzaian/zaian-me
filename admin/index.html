@@ -1163,7 +1163,9 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
       content.design.projects.push(proj);
     }
     closeModal(); renderProjects();
-    showToast('Project saved — click Save Changes to publish');
+    // Auto-publish to server so user doesn't have to click "Save Changes" separately
+    saveBtn.textContent = 'Publishing…';
+    document.getElementById('save-btn').click();
   } catch(err) {
     console.error('Save Project failed:', err);
     showToast('Save failed: ' + (err.message || err), true);

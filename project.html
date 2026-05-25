@@ -13,12 +13,10 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{--black:#000;--white:#fff;--border:rgba(255,255,255,.08);--muted:rgba(255,255,255,.36);}
     html{overflow-x:hidden}
-    body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;cursor:none;}
+    body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
 
     #curtain{position:fixed;inset:0;z-index:9000;background:var(--black);pointer-events:none;animation:curtain-fallback 3s forwards;}
     @keyframes curtain-fallback{0%,90%{opacity:1}100%{opacity:0;pointer-events:none}}
-
-    #cursor{position:fixed;width:12px;height:12px;border-radius:50%;background:#fff;pointer-events:none;mix-blend-mode:difference;z-index:9999;transform:translate(-50%,-50%);transition:opacity .2s;will-change:left,top;}
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:1.6rem 3rem;mix-blend-mode:normal;}
@@ -62,8 +60,7 @@
     .proj-gallery.quint .gallery-item:first-child{grid-column:1/-1;}
     .proj-gallery.quint{grid-template-columns:repeat(2,1fr);}
     .gallery-item{overflow:hidden;aspect-ratio:4/3;background:#0d0d0d;}
-    .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s cubic-bezier(.76,0,.24,1);}
-    .gallery-item:hover img{transform:scale(1.04);}
+    .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;}
 
     /* ── BACK ── */
     .proj-back{padding:5rem 3rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -89,7 +86,6 @@
 <body>
 
 <div id="curtain"></div>
-<div id="cursor"></div>
 
 <nav id="nav">
   <div class="nav-frame">
@@ -125,12 +121,6 @@ gsap.to('#curtain',{scaleY:0,duration:.9,ease:'power3.inOut',delay:.05,onComplet
 }});
 setTimeout(function(){var c=document.getElementById('curtain');if(c){c.style.opacity='0';c.style.pointerEvents='none';}},2500);
 
-/* ── Custom cursor ── */
-const cur=document.getElementById('cursor');
-document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
-document.addEventListener('mouseleave',()=>{cur.style.opacity='0';});
-document.addEventListener('mouseenter',()=>{cur.style.opacity='1';});
-
 /* ── Load project ── */
 const params = new URLSearchParams(location.search);
 const projId = params.get('id');
@@ -154,9 +144,10 @@ function renderProject(p, allProjects) {
     : images.length === 5 ? 'quint'
     : '';
 
-  // Find prev/next project
+  // Find next project — only if there's more than one project total
   const idx = allProjects.findIndex(x=>x.id===p.id);
-  const next = allProjects[(idx+1) % allProjects.length];
+  const hasNext = allProjects.length > 1;
+  const next = hasNext ? allProjects[(idx+1) % allProjects.length] : null;
 
   const galleryHTML = images.length ? `
     <div class="proj-gallery ${galleryClass}">
@@ -196,8 +187,10 @@ function renderProject(p, allProjects) {
     ${galleryHTML}
 
     <div class="proj-back">
-      <a class="back-link" href="project.html?id=${next.id}" onclick="navigateTo(event,'project.html?id=${next.id}')">Next: ${next.name} →</a>
-      <span class="back-num">Project ${String(allProjects.findIndex(x=>x.id===p.id)+1).padStart(2,'0')} / ${String(allProjects.length).padStart(2,'0')}</span>
+      ${hasNext
+        ? `<a class="back-link" href="project.html?id=${next.id}" onclick="navigateTo(event,'project.html?id=${next.id}')">Next: ${next.name} →</a>`
+        : `<a class="back-link" href="design.html" onclick="navigate(event,'design.html')">← Back to Design</a>`}
+      <span class="back-num">Project ${String(idx+1).padStart(2,'0')} / ${String(allProjects.length).padStart(2,'0')}</span>
     </div>`;
 
   // Reveal hero image
