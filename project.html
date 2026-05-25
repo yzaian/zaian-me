@@ -162,13 +162,13 @@ function renderProject(p, allProjects) {
     <div class="proj-gallery ${galleryClass}">
       ${images.map(img=>`
         <div class="gallery-item">
-          <img src="/${img}" alt="${p.name}" loading="lazy">
+          <img src="${img.startsWith('http') ? img : '/' + img}" alt="${p.name}" loading="lazy">
         </div>`).join('')}
     </div>` : '';
 
   document.getElementById('proj-wrap').innerHTML = `
     <div class="proj-hero">
-      <img src="/${p.image}" alt="${p.name}">
+      <img src="${p.image && p.image.startsWith('http') ? p.image : '/' + p.image}" alt="${p.name}">
       <div class="proj-hero-overlay"></div>
     </div>
 
