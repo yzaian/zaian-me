@@ -176,6 +176,11 @@ function renderProject(p, allProjects) {
             <div class="proj-meta-label">Category</div>
             <div class="proj-meta-val">${p.categoryLabel}</div>
           </div>
+          ${p.location ? `
+          <div class="proj-meta-item">
+            <div class="proj-meta-label">Location</div>
+            <div class="proj-meta-val">${p.location}</div>
+          </div>` : ''}
           <div class="proj-meta-item">
             <div class="proj-meta-label">Designer</div>
             <div class="proj-meta-val">Yahia Zaian</div>
@@ -214,7 +219,7 @@ function navigateTo(e,url){e.preventDefault();lenis.stop();gsap.to('#curtain',{s
 window.navigate=navigate;
 function navigateBack(e){e.preventDefault();lenis.stop();gsap.to('#curtain',{scaleY:1,transformOrigin:'bottom',duration:.65,ease:'power3.inOut',onComplete:()=>history.back()});}
 window.navigateBack=navigateBack;
-window.addEventListener('pageshow',function(e){if(e.persisted){gsap.set('#curtain',{scaleY:1,transformOrigin:'top'});gsap.to('#curtain',{scaleY:0,transformOrigin:'top',duration:.85,ease:'power3.inOut',delay:.05});}});
+window.addEventListener('pageshow',function(e){if(e.persisted){try{lenis.start();}catch(_){}gsap.set('#curtain',{scaleY:1,transformOrigin:'top'});gsap.to('#curtain',{scaleY:0,transformOrigin:'top',duration:.85,ease:'power3.inOut',delay:.05});}});
 </script>
 </body>
 </html>

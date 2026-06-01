@@ -528,6 +528,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <div class="field"><label>Description</label><textarea id="modal-desc" rows="4" placeholder="What you did, for whom, the challenge, the result..."></textarea></div>
       </div>
       <div class="form-row single">
+        <div class="field"><label>Location (optional — country, city, or region)</label><input type="text" id="modal-location" placeholder="e.g. Cairo, Egypt 🇪🇬"></div>
+      </div>
+      <div class="form-row single">
         <div class="field">
           <label>Gallery Images (shown on project page)</label>
           <div id="modal-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-bottom:.55rem;"></div>
@@ -1051,6 +1054,7 @@ function openModal(id) {
     document.getElementById('modal-title').textContent='Edit Project';
     document.getElementById('modal-name').value       = p.name;
     document.getElementById('modal-desc').value       = p.description||'';
+    document.getElementById('modal-location').value   = p.location||'';
     document.getElementById('modal-link').value       = p.link||'';
     const prev=document.getElementById('modal-img-preview');
     prev.src = p.image && p.image.startsWith('http') ? p.image : '/' + p.image;
@@ -1069,7 +1073,7 @@ function openModal(id) {
     renderGalleryThumbs();
   } else {
     document.getElementById('modal-title').textContent='Add Project';
-    ['modal-name','modal-desc','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
+    ['modal-name','modal-desc','modal-location','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('modal-img-preview').style.display='none';
     document.getElementById('modal-img-file').value='';
     window._customCatLabels = {};
@@ -1194,6 +1198,7 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
       category:      sel.slugs[0],
       categoryLabel: sel.labels.join(' · '),
       description:   document.getElementById('modal-desc').value.trim(),
+      location:      document.getElementById('modal-location').value.trim(),
       image:         imgPath,
       link:          document.getElementById('modal-link').value.trim(),
       images:        allGalleryPaths
