@@ -534,7 +534,7 @@
         <div class="item-content">
           <span class="item-num">${String(i+1).padStart(2,'0')}</span>
           <div>
-            <div class="item-cat">${p.categoryLabel}</div>
+            <div class="item-cat">${p.categoryLabel}${p.year ? ` · ${p.year}` : ''}</div>
             <div class="item-name">${p.name}</div>
           </div>
         </div>
