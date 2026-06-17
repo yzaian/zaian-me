@@ -511,7 +511,20 @@
   });
 
   /* ── Load projects from content.json ── */
+  // Sort key: parse year string ("2024", "2024-03", "Jan 2024") into a comparable number.
+  // Projects without a year sink to the bottom; ties keep their original order.
+  function yearKey(p) {
+    const s = (p.year || '').toString().trim();
+    if (!s) return -Infinity;
+    const m = s.match(/(\d{4})(?:[-/\s]+(\d{1,2}))?/);
+    if (!m) return -Infinity;
+    const y = parseInt(m[1], 10);
+    const mo = m[2] ? Math.min(12, parseInt(m[2], 10)) : 6; // default mid-year for year-only
+    return y * 100 + mo;
+  }
   function initGrid(projects) {
+    // Sort newest first by year; projects with no year fall to the end
+    projects = [...projects].sort((a, b) => yearKey(b) - yearKey(a));
     const grid = document.getElementById('grid');
     grid.innerHTML = projects.map((p, i) => `
       <div class="item js-item" data-id="${p.id}" data-cats="${((p.categories && p.categories.length) ? p.categories : [p.category]).join(' ')}">

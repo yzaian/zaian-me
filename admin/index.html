@@ -527,8 +527,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       <div class="form-row single">
         <div class="field"><label>Description</label><textarea id="modal-desc" rows="4" placeholder="What you did, for whom, the challenge, the result..."></textarea></div>
       </div>
-      <div class="form-row single">
+      <div class="form-row">
         <div class="field"><label>Location (optional — country, city, or region)</label><input type="text" id="modal-location" placeholder="e.g. Cairo, Egypt 🇪🇬"></div>
+        <div class="field"><label>Year (used to sort projects, newest first)</label><input type="text" id="modal-year" placeholder="e.g. 2024 or 2024-03"></div>
       </div>
       <div class="form-row single">
         <div class="field">
@@ -1055,6 +1056,7 @@ function openModal(id) {
     document.getElementById('modal-name').value       = p.name;
     document.getElementById('modal-desc').value       = p.description||'';
     document.getElementById('modal-location').value   = p.location||'';
+    document.getElementById('modal-year').value       = p.year||'';
     document.getElementById('modal-link').value       = p.link||'';
     const prev=document.getElementById('modal-img-preview');
     prev.src = p.image && p.image.startsWith('http') ? p.image : '/' + p.image;
@@ -1073,7 +1075,7 @@ function openModal(id) {
     renderGalleryThumbs();
   } else {
     document.getElementById('modal-title').textContent='Add Project';
-    ['modal-name','modal-desc','modal-location','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
+    ['modal-name','modal-desc','modal-location','modal-year','modal-link','modal-cat-custom'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('modal-img-preview').style.display='none';
     document.getElementById('modal-img-file').value='';
     window._customCatLabels = {};
@@ -1199,6 +1201,7 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
       categoryLabel: sel.labels.join(' · '),
       description:   document.getElementById('modal-desc').value.trim(),
       location:      document.getElementById('modal-location').value.trim(),
+      year:          document.getElementById('modal-year').value.trim(),
       image:         imgPath,
       link:          document.getElementById('modal-link').value.trim(),
       images:        allGalleryPaths

@@ -166,6 +166,11 @@ function renderProject(p, allProjects) {
               <div class="proj-meta-label">Location</div>
               <div class="proj-meta-val">${p.location}</div>
             </div>` : ''}
+            ${p.year ? `
+            <div class="proj-meta-item">
+              <div class="proj-meta-label">Year</div>
+              <div class="proj-meta-val">${p.year}</div>
+            </div>` : ''}
             <div class="proj-meta-item">
               <div class="proj-meta-label">Designer</div>
               <div class="proj-meta-val">Yahia Zaian</div>
