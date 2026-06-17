@@ -534,7 +534,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <div class="field">
           <label>Gallery Images (shown on project page)</label>
           <div id="modal-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-bottom:.55rem;"></div>
-          <label class="upload-btn" id="gallery-add-label" for="modal-gallery-file">+ Add Image (0/5)</label>
+          <label class="upload-btn" id="gallery-add-label" for="modal-gallery-file">+ Add Image (0/30)</label>
           <input type="file" id="modal-gallery-file" accept="image/*" multiple style="display:none">
         </div>
       </div>
@@ -1085,7 +1085,7 @@ function openModal(id) {
 function closeModal() { document.getElementById('proj-modal').classList.remove('open'); }
 
 function renderGalleryThumbs() {
-  const MAX = 5;
+  const MAX = 30;
   const grid = document.getElementById('modal-gallery-grid');
   const allItems = [
     ...existingGalleryImages.map(path => ({ type:'existing', path })),
@@ -1140,7 +1140,7 @@ document.getElementById('modal-img-file').addEventListener('change',e=>{
 });
 
 document.getElementById('modal-gallery-file').addEventListener('change', e => {
-  const MAX = 5;
+  const MAX = 30;
   Array.from(e.target.files).forEach(file => {
     const total = existingGalleryImages.length + pendingGalleryFiles.length;
     if (total >= MAX) { showToast(`Max ${MAX} gallery images per project`, true); return; }

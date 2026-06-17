@@ -32,15 +32,13 @@
     @media(max-width:600px){.nav-links{gap:1.2rem;}.nav-links a{font-size:.6rem;letter-spacing:.15em;}}
     @media(max-width:400px){.nav-links{gap:.7rem;}}
 
-    /* ── HERO IMAGE ── */
-    .proj-hero{width:100%;height:72svh;min-height:400px;overflow:hidden;position:relative;margin-top:0;}
-    .proj-hero img{width:100%;height:100%;object-fit:cover;display:block;}
-    .proj-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,rgba(0,0,0,.6) 100%);}
+    /* ── HEADER (text-only — Behance-style: images start right under) ── */
+    .proj-header{padding:8rem 3rem 4rem;border-bottom:1px solid var(--border);}
 
     /* ── INFO ── */
-    .proj-info{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
-    .proj-info-l{padding:4rem 3rem;border-right:1px solid var(--border);}
-    .proj-info-r{padding:4rem 3rem;display:flex;flex-direction:column;justify-content:space-between;}
+    .proj-info{display:grid;grid-template-columns:1.5fr 1fr;gap:4rem;}
+    .proj-info-l{}
+    .proj-info-r{display:flex;flex-direction:column;justify-content:flex-start;}
     .proj-cat{font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem;}
     .proj-cat::before{content:'';display:block;width:18px;height:1px;background:currentColor;}
     .proj-title{font-family:'Archivo',sans-serif;font-weight:900;font-style:italic;font-size:clamp(3rem,7vw,7rem);line-height:.88;letter-spacing:-.03em;text-transform:uppercase;margin-bottom:2rem;}
@@ -52,15 +50,10 @@
     .proj-meta-label{font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;}
     .proj-meta-val{font-size:.88rem;font-weight:500;}
 
-    /* ── GALLERY ── */
-    .proj-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;background:var(--border);}
-    .proj-gallery.single{grid-template-columns:1fr;}
-    .proj-gallery.triple{grid-template-columns:repeat(3,1fr);}
-    .proj-gallery.quad{grid-template-columns:repeat(2,1fr);}
-    .proj-gallery.quint .gallery-item:first-child{grid-column:1/-1;}
-    .proj-gallery.quint{grid-template-columns:repeat(2,1fr);}
-    .gallery-item{overflow:hidden;aspect-ratio:4/3;background:#0d0d0d;}
-    .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;}
+    /* ── GALLERY (Behance-style: full-width stacked, no crop, no hover) ── */
+    .proj-gallery{display:flex;flex-direction:column;background:#0a0a0a;}
+    .gallery-item{width:100%;background:#0a0a0a;}
+    .gallery-item img{width:100%;height:auto;display:block;}
 
     /* ── BACK ── */
     .proj-back{padding:5rem 3rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -74,11 +67,8 @@
     /* ── RESPONSIVE ── */
     @media(max-width:768px){
       nav{padding:1.2rem 1.5rem;}
-      .proj-info{grid-template-columns:1fr;}
-      .proj-info-l{border-right:none;border-bottom:1px solid var(--border);padding:3rem 1.5rem;}
-      .proj-info-r{padding:2.5rem 1.5rem;}
-      .proj-gallery{grid-template-columns:1fr;}
-      .proj-gallery.triple{grid-template-columns:1fr;}
+      .proj-header{padding:6rem 1.5rem 2.5rem;}
+      .proj-info{grid-template-columns:1fr;gap:2rem;}
       .proj-back{padding:3rem 1.5rem;flex-direction:column;align-items:flex-start;gap:1rem;}
     }
   </style>
@@ -137,53 +127,49 @@ fetch('/api/content')
   .catch(()=>{ document.getElementById('proj-wrap').innerHTML='<div class="not-found"><p>Could not load project.</p></div>'; });
 
 function renderProject(p, allProjects) {
-  const images = p.images || [];
-  const galleryClass = images.length === 1 ? 'single'
-    : images.length === 3 ? 'triple'
-    : images.length === 4 ? 'quad'
-    : images.length === 5 ? 'quint'
-    : '';
+  // Build full image list: cover first, then gallery (de-duplicated)
+  const rawImages = p.images || [];
+  const cover = p.image || '';
+  const allImages = cover && !rawImages.includes(cover) ? [cover, ...rawImages] : rawImages;
+  const resolveImg = (img) => img.startsWith('http') ? img : '/' + img;
 
   // Find next project — only if there's more than one project total
   const idx = allProjects.findIndex(x=>x.id===p.id);
   const hasNext = allProjects.length > 1;
   const next = hasNext ? allProjects[(idx+1) % allProjects.length] : null;
 
-  const galleryHTML = images.length ? `
-    <div class="proj-gallery ${galleryClass}">
-      ${images.map((img,i)=>`
+  const galleryHTML = allImages.length ? `
+    <div class="proj-gallery">
+      ${allImages.map((img,i)=>`
         <div class="gallery-item">
-          <img src="${img.startsWith('http') ? img : '/' + img}" alt="${p.name}" ${i>2?'loading="lazy"':''} onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a';">
+          <img src="${resolveImg(img)}" alt="${p.name}" ${i>1?'loading="lazy"':''} onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a';">
         </div>`).join('')}
     </div>` : '';
 
   document.getElementById('proj-wrap').innerHTML = `
-    <div class="proj-hero">
-      <img src="${p.image && p.image.startsWith('http') ? p.image : '/' + p.image}" alt="${p.name}">
-      <div class="proj-hero-overlay"></div>
-    </div>
-
-    <div class="proj-info">
-      <div class="proj-info-l">
-        <div class="proj-cat">${p.categoryLabel}</div>
-        <h1 class="proj-title">${p.name}</h1>
-        ${p.description ? `<p class="proj-desc">${p.description.replace(/\n/g,'<br>')}</p>` : ''}
-        ${p.link ? `<a class="proj-link" href="${p.link}" target="_blank">View Project ↗</a>` : ''}
-      </div>
-      <div class="proj-info-r">
-        <div class="proj-meta">
-          <div class="proj-meta-item">
-            <div class="proj-meta-label">Category</div>
-            <div class="proj-meta-val">${p.categoryLabel}</div>
-          </div>
-          ${p.location ? `
-          <div class="proj-meta-item">
-            <div class="proj-meta-label">Location</div>
-            <div class="proj-meta-val">${p.location}</div>
-          </div>` : ''}
-          <div class="proj-meta-item">
-            <div class="proj-meta-label">Designer</div>
-            <div class="proj-meta-val">Yahia Zaian</div>
+    <div class="proj-header">
+      <div class="proj-info">
+        <div class="proj-info-l">
+          <div class="proj-cat">${p.categoryLabel}</div>
+          <h1 class="proj-title">${p.name}</h1>
+          ${p.description ? `<p class="proj-desc">${p.description.replace(/\n/g,'<br>')}</p>` : ''}
+          ${p.link ? `<a class="proj-link" href="${p.link}" target="_blank">View Project ↗</a>` : ''}
+        </div>
+        <div class="proj-info-r">
+          <div class="proj-meta">
+            <div class="proj-meta-item">
+              <div class="proj-meta-label">Category</div>
+              <div class="proj-meta-val">${p.categoryLabel}</div>
+            </div>
+            ${p.location ? `
+            <div class="proj-meta-item">
+              <div class="proj-meta-label">Location</div>
+              <div class="proj-meta-val">${p.location}</div>
+            </div>` : ''}
+            <div class="proj-meta-item">
+              <div class="proj-meta-label">Designer</div>
+              <div class="proj-meta-val">Yahia Zaian</div>
+            </div>
           </div>
         </div>
       </div>
@@ -199,7 +185,6 @@ function renderProject(p, allProjects) {
     </div>`;
 
   // Reveal hero image
-  gsap.from('.proj-hero img',{scale:1.06,duration:1.2,ease:'power3.out',delay:.3});
   // Reveal info
   gsap.from('.proj-cat',{y:20,opacity:0,duration:.7,ease:'power2.out',delay:.5});
   gsap.from('.proj-title',{y:40,opacity:0,duration:.9,ease:'power3.out',delay:.6});
