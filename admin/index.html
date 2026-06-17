@@ -172,16 +172,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .platform-del:hover{color:var(--danger);border-color:var(--danger);}
 
 /* ─── GALLERY THUMBS ─── */
-.gallery-thumb{position:relative;aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:var(--card2);border:1px solid var(--border2);}
-.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-.gallery-thumb-del{position:absolute;top:.25rem;right:.25rem;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.2);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer;z-index:2;}
+.gallery-thumb{position:relative;aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:var(--card2);border:1px solid var(--border2);cursor:grab;transition:transform .15s,opacity .15s;}
+.gallery-thumb:active{cursor:grabbing;}
+.gallery-thumb.dragging{opacity:.4;}
+.gallery-thumb.drop-target{outline:2px dashed var(--accent);outline-offset:-3px;}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.gallery-thumb-del{position:absolute;top:.25rem;right:.25rem;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.2);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer;z-index:3;}
 .gallery-thumb-del:hover{background:var(--danger);color:#fff;}
-.gallery-thumb-arrows{position:absolute;bottom:.25rem;left:.25rem;right:.25rem;display:flex;justify-content:space-between;gap:.25rem;z-index:2;opacity:0;transition:opacity .15s;}
-.gallery-thumb:hover .gallery-thumb-arrows{opacity:1;}
-.gallery-arrow{flex:1;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.85rem;height:22px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:inherit;}
-.gallery-arrow:hover{background:rgba(255,255,255,.15);}
-.gallery-arrow:disabled{opacity:.3;cursor:not-allowed;}
 .gallery-thumb-idx{position:absolute;top:.25rem;left:.25rem;background:rgba(0,0,0,.85);color:#fff;font-size:.55rem;font-weight:600;padding:.2rem .4rem;border-radius:3px;z-index:2;letter-spacing:.05em;}
+.gallery-size-bar{position:absolute;bottom:.25rem;left:.25rem;right:.25rem;display:flex;gap:.18rem;z-index:3;opacity:0;transition:opacity .15s;}
+.gallery-thumb:hover .gallery-size-bar{opacity:1;}
+.gallery-size-btn{flex:1;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.6rem;font-weight:600;height:22px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;letter-spacing:.05em;}
+.gallery-size-btn:hover{background:rgba(255,255,255,.15);}
+.gallery-size-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
 
 /* ─── TOAST ─── */
 .toast{position:fixed;bottom:1.4rem;right:1.4rem;z-index:9999;padding:.6rem 1rem;border-radius:7px;font-size:.76rem;font-weight:500;background:var(--success);color:#000;transform:translateY(20px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
@@ -1077,7 +1080,10 @@ function openModal(id) {
     });
     renderCategoryChips(selectedSlugs);
     document.getElementById('modal-cat-custom').value = '';
-    existingGalleryImages = [...(p.images||[])];
+    // Normalize old (string) and new ({url, size}) gallery shapes
+    existingGalleryImages = (p.images||[]).map(it => typeof it === 'string'
+      ? { path: it, size: 'full' }
+      : { path: it.url || '', size: it.size || 'full' });
     renderGalleryThumbs();
   } else {
     document.getElementById('modal-title').textContent='Add Project';
@@ -1092,57 +1098,53 @@ function openModal(id) {
 }
 function closeModal() { document.getElementById('proj-modal').classList.remove('open'); }
 
+// Unified view of all gallery items in display order (existing + pending mixed).
+// Each entry: { type:'existing'|'pending', size, path? (existing) | file/previewUrl? (pending) }
+function getUnifiedList() {
+  return [
+    ...existingGalleryImages.map(it => ({ type:'existing', path: it.path, size: it.size || 'full' })),
+    ...pendingGalleryFiles.map(it => ({ type:'pending', file: it.file, previewUrl: it.previewUrl, size: it.size || 'full' })),
+  ];
+}
+function commitUnifiedList(list) {
+  existingGalleryImages = list.filter(x => x.type === 'existing').map(x => ({ path: x.path, size: x.size }));
+  pendingGalleryFiles   = list.filter(x => x.type === 'pending').map(x => ({ file: x.file, previewUrl: x.previewUrl, size: x.size }));
+}
+
 function renderGalleryThumbs() {
   const MAX = 30;
   const grid = document.getElementById('modal-gallery-grid');
-  const allItems = [
-    ...existingGalleryImages.map(path => ({ type:'existing', path })),
-    ...pendingGalleryFiles.map(f => ({ type:'pending', url: f.previewUrl, file: f.file }))
-  ];
-  const count = allItems.length;
+  const items = getUnifiedList();
+  const count = items.length;
   const label = document.getElementById('gallery-add-label');
   if (label) {
     label.textContent = count >= MAX ? `Max ${MAX} images reached` : `+ Add Image (${count}/${MAX})`;
     label.style.opacity = count >= MAX ? '.4' : '1';
     label.style.pointerEvents = count >= MAX ? 'none' : '';
   }
-  grid.innerHTML = allItems.map((item, i) => {
+  grid.innerHTML = items.map((item, i) => {
     const src = item.type === 'existing'
       ? (item.path.startsWith('http') ? item.path : '/' + item.path)
-      : item.url;
+      : item.previewUrl;
+    const sizeBtn = (val, label) =>
+      `<button class="gallery-size-btn ${item.size === val ? 'active' : ''}" data-size="${val}" data-i="${i}" title="${label}">${label}</button>`;
     return `
-    <div class="gallery-thumb" data-i="${i}">
+    <div class="gallery-thumb" draggable="true" data-i="${i}">
       <div class="gallery-thumb-idx">${i+1}</div>
       <img src="${src}" alt="">
       <div class="gallery-thumb-del" data-i="${i}">✕</div>
-      <div class="gallery-thumb-arrows">
-        <button class="gallery-arrow" data-action="left" data-i="${i}" ${i===0?'disabled':''} title="Move left">‹</button>
-        <button class="gallery-arrow" data-action="right" data-i="${i}" ${i===allItems.length-1?'disabled':''} title="Move right">›</button>
+      <div class="gallery-size-bar">
+        ${sizeBtn('full', '1')}
+        ${sizeBtn('half', '2')}
+        ${sizeBtn('third', '3')}
       </div>
     </div>`;
   }).join('');
 
-  // Unified list view: index into combined existing+pending order
-  function getUnifiedList() {
-    return [
-      ...existingGalleryImages.map(p => ({ type:'existing', value: p })),
-      ...pendingGalleryFiles.map(f => ({ type:'pending', value: f })),
-    ];
-  }
-  function commitUnifiedList(list) {
-    existingGalleryImages = list.filter(x => x.type === 'existing').map(x => x.value);
-    pendingGalleryFiles = list.filter(x => x.type === 'pending').map(x => x.value);
-  }
-  function swapAt(i, j) {
-    const list = getUnifiedList();
-    if (i < 0 || j < 0 || i >= list.length || j >= list.length) return;
-    [list[i], list[j]] = [list[j], list[i]];
-    commitUnifiedList(list);
-    renderGalleryThumbs();
-  }
-
+  // Delete
   grid.querySelectorAll('.gallery-thumb-del').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       const i = +btn.dataset.i;
       const list = getUnifiedList();
       list.splice(i, 1);
@@ -1150,11 +1152,47 @@ function renderGalleryThumbs() {
       renderGalleryThumbs();
     });
   });
-  grid.querySelectorAll('.gallery-arrow').forEach(btn => {
+
+  // Size selector
+  grid.querySelectorAll('.gallery-size-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const i = +btn.dataset.i;
-      swapAt(i, btn.dataset.action === 'left' ? i - 1 : i + 1);
+      const size = btn.dataset.size;
+      const list = getUnifiedList();
+      list[i].size = size;
+      commitUnifiedList(list);
+      renderGalleryThumbs();
+    });
+  });
+
+  // Drag-and-drop reorder
+  let dragSrc = null;
+  grid.querySelectorAll('.gallery-thumb').forEach(thumb => {
+    thumb.addEventListener('dragstart', e => {
+      dragSrc = +thumb.dataset.i;
+      thumb.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    thumb.addEventListener('dragend', () => {
+      thumb.classList.remove('dragging');
+      grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+    });
+    thumb.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+      thumb.classList.add('drop-target');
+    });
+    thumb.addEventListener('drop', e => {
+      e.preventDefault();
+      const dest = +thumb.dataset.i;
+      if (dragSrc === null || dragSrc === dest) return;
+      const list = getUnifiedList();
+      const [moved] = list.splice(dragSrc, 1);
+      list.splice(dest, 0, moved);
+      commitUnifiedList(list);
+      renderGalleryThumbs();
     });
   });
 }
@@ -1186,7 +1224,7 @@ document.getElementById('modal-gallery-file').addEventListener('change', e => {
   Array.from(e.target.files).forEach(file => {
     const total = existingGalleryImages.length + pendingGalleryFiles.length;
     if (total >= MAX) { showToast(`Max ${MAX} gallery images per project`, true); return; }
-    pendingGalleryFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+    pendingGalleryFiles.push({ file, previewUrl: URL.createObjectURL(file), size: 'full' });
   });
   e.target.value = '';
   renderGalleryThumbs();
@@ -1226,7 +1264,15 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
     imgPath = mainPath;
 
     if(!imgPath) { showToast('Please upload an image',true); return; }
-    const allGalleryPaths = [...existingGalleryImages, ...newGalleryPaths];
+
+    // Build gallery in the unified display order, mapping pending files to their uploaded URLs
+    // and preserving each item's size choice (full/half/third).
+    let pendingCursor = 0;
+    const allGalleryImages = getUnifiedList().map(it => {
+      if (it.type === 'existing') return { url: it.path, size: it.size };
+      const url = newGalleryPaths[pendingCursor++];
+      return { url, size: it.size };
+    });
 
     const sel = getSelectedCategories();
     if (sel.slugs.length === 0) { showToast('Pick at least one category', true); return; }
@@ -1244,7 +1290,7 @@ document.getElementById('modal-save').addEventListener('click',async()=>{
       year:          document.getElementById('modal-year').value.trim(),
       image:         imgPath,
       link:          document.getElementById('modal-link').value.trim(),
-      images:        allGalleryPaths
+      images:        allGalleryImages
     };
     if(editingId) {
       const idx=content.design.projects.findIndex(p=>p.id===editingId);

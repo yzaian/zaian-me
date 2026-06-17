@@ -52,10 +52,12 @@
 
     /* ── GALLERY (Behance article-style: centered max-width, no crop, no hover) ── */
     .proj-gallery{display:flex;flex-direction:column;align-items:center;gap:1.4rem;padding:3rem 1.5rem 5rem;background:#0a0a0a;}
-    .gallery-item{width:100%;max-width:1100px;background:transparent;}
+    .gallery-row{width:100%;max-width:1100px;display:flex;gap:1.4rem;}
+    .gallery-item{flex:1;min-width:0;background:transparent;}
     .gallery-item img{width:100%;height:auto;display:block;}
     @media(max-width:768px){
       .proj-gallery{padding:2rem 1rem 4rem;gap:1rem;}
+      .gallery-row{flex-direction:column;gap:1rem;}
     }
 
     /* ── BACK ── */
@@ -130,22 +132,51 @@ fetch('/api/content')
   .catch(()=>{ document.getElementById('proj-wrap').innerHTML='<div class="not-found"><p>Could not load project.</p></div>'; });
 
 function renderProject(p, allProjects) {
-  // Build full image list: cover first, then gallery (de-duplicated)
-  const rawImages = p.images || [];
+  // Normalize images: strings → {url, size:'full'}; objects pass through with defaults
+  const toItem = (raw) => typeof raw === 'string'
+    ? { url: raw, size: 'full' }
+    : { url: raw.url || '', size: raw.size || 'full' };
+  const rawItems = (p.images || []).map(toItem);
+  // Cover is included as the first image if not already in gallery
   const cover = p.image || '';
-  const allImages = cover && !rawImages.includes(cover) ? [cover, ...rawImages] : rawImages;
-  const resolveImg = (img) => img.startsWith('http') ? img : '/' + img;
+  const hasCover = rawItems.some(it => it.url === cover);
+  const items = cover && !hasCover ? [{ url: cover, size: 'full' }, ...rawItems] : rawItems;
+  const resolveImg = (u) => u.startsWith('http') ? u : '/' + u;
+
+  // Group consecutive non-full items into rows (2 halves → 1 row; 3 thirds → 1 row)
+  const rows = [];
+  let buffer = [];
+  const flushBuffer = () => { if (buffer.length) { rows.push(buffer); buffer = []; } };
+  for (const it of items) {
+    if (it.size === 'full') {
+      flushBuffer();
+      rows.push([it]);
+    } else {
+      const cap = it.size === 'third' ? 3 : 2;
+      // If buffer mixes sizes or is at cap, flush first
+      if (buffer.length && (buffer[0].size !== it.size || buffer.length >= cap)) flushBuffer();
+      buffer.push(it);
+      if (buffer.length === cap) flushBuffer();
+    }
+  }
+  flushBuffer();
 
   // Find next project — only if there's more than one project total
   const idx = allProjects.findIndex(x=>x.id===p.id);
   const hasNext = allProjects.length > 1;
   const next = hasNext ? allProjects[(idx+1) % allProjects.length] : null;
 
-  const galleryHTML = allImages.length ? `
+  let imgIdx = 0;
+  const galleryHTML = rows.length ? `
     <div class="proj-gallery">
-      ${allImages.map((img,i)=>`
-        <div class="gallery-item">
-          <img src="${resolveImg(img)}" alt="${p.name}" ${i>1?'loading="lazy"':''} onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a';">
+      ${rows.map(row => `
+        <div class="gallery-row">
+          ${row.map(it => {
+            const i = imgIdx++;
+            return `<div class="gallery-item">
+              <img src="${resolveImg(it.url)}" alt="${p.name}" ${i>2?'loading="lazy"':''} onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a';">
+            </div>`;
+          }).join('')}
         </div>`).join('')}
     </div>` : '';
 
