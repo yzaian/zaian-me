@@ -221,6 +221,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       <div class="nav-group-label">Files</div>
       <div class="nav-item" data-section="documents"><span class="nav-icon">📄</span>Portfolio & CV</div>
     </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Standalone</div>
+      <div class="nav-item" data-section="release"><span class="nav-icon">🎧</span>Release Page</div>
+    </div>
   </nav>
   <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:.45rem;">
     <a class="preview-btn" href="/" target="_blank">↗ Preview Website</a>
@@ -507,6 +511,41 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       </div>
     </section>
 
+    <!-- ── RELEASE PAGE (standalone) ── -->
+    <section class="section" id="sec-release">
+      <div class="section-header">
+        <div class="section-title">Release Page</div>
+        <div class="section-sub">A standalone Linktree-style page for promoting a release. NOT linked from the main site — share the URL directly: <a href="/release" target="_blank" style="color:var(--accent);text-decoration:underline">zaian.me/release</a></div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-section-title">Cover</div>
+        <div class="photo-row">
+          <img id="release-cover-preview" class="proj-img-preview" src="" alt="" style="max-width:200px;aspect-ratio:1/1;display:none">
+          <div>
+            <label class="upload-btn" for="release-cover-file">Upload Cover</label>
+            <input type="file" id="release-cover-file" accept="image/*" style="display:none">
+            <div class="photo-note">Square cover for the release (recommended 1000×1000 or larger)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-section-title">Text</div>
+        <div class="form-row">
+          <div class="field"><label>Title (release name)</label><input type="text" id="release-title" placeholder="e.g. Echoes"></div>
+          <div class="field"><label>Subtitle (optional)</label><input type="text" id="release-subtitle" placeholder="e.g. Single · 2026"></div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-section-title">Platform Links</div>
+        <div class="section-sub" style="margin-bottom:.8rem">Drag to reorder. Icon is picked from the platform name automatically (Spotify, Apple Music, SoundCloud, YouTube, Deezer, Anghami, Tidal, etc.) — or override with a Font Awesome class.</div>
+        <div id="release-links-list" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+        <button class="btn-primary" id="release-add-link" style="margin-top:.7rem;">+ Add Platform Link</button>
+      </div>
+    </section>
+
   </div>
 </main>
 
@@ -606,6 +645,7 @@ const SECTIONS = {
   contact:      { el:'sec-contact',      title:'Contact Info' },
   availability: { el:'sec-availability', title:'Availability' },
   documents:    { el:'sec-documents',    title:'Portfolio & CV' },
+  release:      { el:'sec-release',       title:'Release Page (standalone)' },
 };
 
 const CAT_LABELS = {
@@ -786,7 +826,68 @@ function populate() {
   const docs = content.documents || {};
   document.getElementById('portfolio-updated-at').value = docs.portfolioUpdatedAt || '';
   document.getElementById('cv-updated-at').value        = docs.cvUpdatedAt        || '';
+
+  // Release page
+  const rel = content.release || {};
+  document.getElementById('release-title').value    = rel.title    || '';
+  document.getElementById('release-subtitle').value = rel.subtitle || '';
+  const coverPrev = document.getElementById('release-cover-preview');
+  if (rel.cover) {
+    coverPrev.src = rel.cover.startsWith('http') ? rel.cover : '/' + rel.cover;
+    coverPrev.style.display = 'block';
+  } else {
+    coverPrev.style.display = 'none';
+  }
+  releaseLinks = [...(rel.links || [])];
+  renderReleaseLinks();
 }
+
+// ── Release page state + rendering ──────────────────────
+let releaseLinks = []; // [{label, url, icon?}]
+let pendingReleaseCover = null;
+function renderReleaseLinks() {
+  const wrap = document.getElementById('release-links-list');
+  wrap.innerHTML = releaseLinks.map((l, i) => `
+    <div class="release-link-row" draggable="true" data-i="${i}" style="display:grid;grid-template-columns:auto 1fr 2fr 1.2fr auto;gap:.5rem;align-items:center;padding:.55rem;background:var(--card);border:1px solid var(--border2);border-radius:7px;cursor:grab;">
+      <span style="color:var(--muted);font-size:.7rem;font-weight:600;padding:0 .35rem;">⋮⋮</span>
+      <input type="text" class="rl-label" data-i="${i}" placeholder="Platform name (e.g. Spotify)" value="${(l.label||'').replace(/"/g,'&quot;')}" style="background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem .6rem;color:var(--text);font-family:inherit;font-size:.78rem">
+      <input type="url"  class="rl-url"   data-i="${i}" placeholder="https://..."                    value="${(l.url||'').replace(/"/g,'&quot;')}"   style="background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem .6rem;color:var(--text);font-family:inherit;font-size:.78rem">
+      <input type="text" class="rl-icon"  data-i="${i}" placeholder="Icon (optional)"                value="${(l.icon||'').replace(/"/g,'&quot;')}"  style="background:var(--card2);border:1px solid var(--border2);border-radius:5px;padding:.5rem .6rem;color:var(--text);font-family:inherit;font-size:.72rem">
+      <button class="rl-del" data-i="${i}" style="background:transparent;border:none;color:var(--danger);font-size:1.1rem;cursor:pointer;padding:0 .3rem;line-height:1;">×</button>
+    </div>`).join('');
+  wrap.querySelectorAll('.rl-label').forEach(el => el.addEventListener('input', e => { releaseLinks[+e.target.dataset.i].label = e.target.value; }));
+  wrap.querySelectorAll('.rl-url').forEach(el   => el.addEventListener('input', e => { releaseLinks[+e.target.dataset.i].url   = e.target.value; }));
+  wrap.querySelectorAll('.rl-icon').forEach(el  => el.addEventListener('input', e => { releaseLinks[+e.target.dataset.i].icon  = e.target.value; }));
+  wrap.querySelectorAll('.rl-del').forEach(el => el.addEventListener('click', e => {
+    releaseLinks.splice(+e.target.dataset.i, 1); renderReleaseLinks();
+  }));
+  // Drag to reorder
+  let dragSrc = null;
+  wrap.querySelectorAll('.release-link-row').forEach(row => {
+    row.addEventListener('dragstart', e => { dragSrc = +row.dataset.i; row.style.opacity = '.4'; });
+    row.addEventListener('dragend',   () => { row.style.opacity = ''; });
+    row.addEventListener('dragover',  e => { e.preventDefault(); });
+    row.addEventListener('drop',      e => {
+      e.preventDefault();
+      const dest = +row.dataset.i;
+      if (dragSrc === null || dragSrc === dest) return;
+      const [moved] = releaseLinks.splice(dragSrc, 1);
+      releaseLinks.splice(dest, 0, moved);
+      renderReleaseLinks();
+    });
+  });
+}
+document.getElementById('release-add-link').addEventListener('click', () => {
+  releaseLinks.push({ label:'', url:'', icon:'' });
+  renderReleaseLinks();
+});
+document.getElementById('release-cover-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  pendingReleaseCover = file;
+  const prev = document.getElementById('release-cover-preview');
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = 'block';
+});
 
 // ── Roles ────────────────────────────────────────────────
 function renderRoles() {
@@ -1484,6 +1585,20 @@ document.getElementById('save-btn').addEventListener('click',async()=>{
   if (!content.documents) content.documents = {};
   content.documents.portfolioUpdatedAt = document.getElementById('portfolio-updated-at').value.trim();
   content.documents.cvUpdatedAt        = document.getElementById('cv-updated-at').value.trim();
+
+  // Release page
+  if (!content.release) content.release = {};
+  if (pendingReleaseCover) {
+    btn.textContent = 'Uploading cover…';
+    const fd = new FormData(); fd.append('image', pendingReleaseCover);
+    const cr = await apiFetch(API+'/upload', { method:'POST', body: fd });
+    const cj = await cr.json();
+    if (cj.path) content.release.cover = cj.path;
+    pendingReleaseCover = null;
+  }
+  content.release.title    = document.getElementById('release-title').value.trim();
+  content.release.subtitle = document.getElementById('release-subtitle').value.trim();
+  content.release.links    = releaseLinks.filter(l => (l.label || '').trim() || (l.url || '').trim());
 
   try {
     const r = await apiFetch(API+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});
