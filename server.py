@@ -210,6 +210,12 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        # Pretty URLs: rewrite extension-less HTML paths to their .html files
+        # (e.g. /release → /release.html, /design → /design.html)
+        pretty = {'/release', '/design', '/music', '/contact', '/project'}
+        if parsed.path in pretty:
+            self.path = parsed.path + '.html' + (('?' + parsed.query) if parsed.query else '')
+            parsed = urlparse(self.path)
         if parsed.path == '/api/content':
             # Try Supabase first; fall back to local file if unavailable
             data, err = supabase_get_content()
